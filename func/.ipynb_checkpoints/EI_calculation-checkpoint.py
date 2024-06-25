@@ -1,6 +1,23 @@
 import numpy as np
 import func.entropy_estimators as ee
 
+def trans10_to_base(number, base = 2, min_length=0):
+    
+    if min_length < 1:
+        raise ValueError("Minimum length must be at least 1")
+    
+    if number == 0:
+        return '0' * min_length
+
+    digits = []
+    while number > 0:
+        digits.insert(0, str(number % base))
+        number //= base
+
+    # 将数字列表转换为字符串，并在前面填充字符以达到最小长度
+    padded_digits = ''.join(digits).zfill(min_length)
+    return padded_digits
+    
 def tpm_ei(tpm, log_base = 2):
     # marginal distribution of y given x ~ Unifrom Dist
     puy = tpm.sum(axis=0)
@@ -16,3 +33,42 @@ def tpm_ei(tpm, log_base = 2):
     # calculate total EI
     ei_all = ei_x.mean()
     return ei_all
+
+def tpm_ei_new(tpm, log_base = 2):
+    # marginal distribution of y given x ~ Unifrom Dist
+    puy = tpm.sum(axis=0)
+    n = tpm.shape[0]
+    # replace 0 to a small positive number to avoid log error
+    eps = 1E-10
+    tpm_e = np.where(tpm==0, eps, tpm)
+    puy_e = np.where(tpm==0, eps, puy)
+    
+    # calculate EI of specific x
+    ei_x = (np.log2(n * tpm_e / puy_e) / np.log2(log_base)  * tpm).sum(axis=1)
+    
+    det = np.log2(n) + (tpm * np.log2(tpm_e)).mean(axis=0)
+    deg = np.log2(n) + tpm.mean(axis=0) * np.log2(tpm_e.mean(axis=0))
+    # calculate total EI
+    ei_all = ei_x.mean()
+    return ei_all,det/np.log2(log_base),deg/np.log2(log_base)
+
+def local_ei_cell(middle_size, e1, e2, markov_matrix, state = 1):
+    state_size = (state + 1)**(middle_size)
+    local_markov = np.zeros([state_size, state_size])
+    for num in range(state_size):
+        binary_string = trans10_to_base(num, base = state +1, min_length = middle_size)
+        padded_binary_string = e1 + binary_string + e2
+        binary_array = [int(bit) for bit in padded_binary_string] 
+        pattern = int(''.join(str(cell) for cell in binary_array), state+1)
+        local_markov[num, :] = markov_matrix[pattern, :]
+    ei = tpm_ei(local_markov, log_base = state+1)
+    return ei, local_markov 
+
+def homo_ca_ei(markov_matrix,middle_size,state=1):
+    ei = 0
+    for e1 in ['0','1']:
+        for e2 in ['0','1']:
+            ei0,_ = local_ei_cell(middle_size,e1,e2,markov_matrix,state)
+            #print(ei0)
+            ei += ei0
+    return ei / 4
