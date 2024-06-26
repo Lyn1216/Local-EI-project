@@ -4,6 +4,7 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import func.entropy_estimators as ee
+from func.EI_calculation import homo_ca_ei
 
 def trans10_to_base(number, base = 2, min_length=0):
     
@@ -65,3 +66,64 @@ def generate_markov(p0, rule, middle_size = 1):
             markov_matrix[i,j] = element
             #markov_matrix[i,:] += p0 / 2**middle_size
     return markov_matrix
+
+def move(strip, markov_matrix,state):
+    grid1=np.zeros([1,len(strip)-2])
+    cumulative_prob = np.cumsum(markov_matrix, axis=1)
+    pattern = int(''.join(str(int(cell)) for cell in strip), state+1)
+    value = random.random()
+    indices = cumulative_prob[pattern,:] <= value
+    interval_indices = np.argmin(indices)
+    interval = trans10_to_base(interval_indices, base = state+1, min_length=len(strip)-2)
+    grid1[0,:] = np.array(list(map(int, list(interval))))
+    return grid1
+
+def cellular_automaton_homo(rule, generations = 100,size=100,p0_list=[0],middle_size = 1):
+    period=len(p0_list)
+    sub_size= size//period
+    # 初始化元胞状态
+    current_generation = [random.randint(0, 1) for _ in range(size)]
+    showmatrix = np.zeros([generations+1,size])
+    showmatrix[0,:] = current_generation
+    
+    markov_list = []
+    for p0 in p0_list:
+        markov_list.append(generate_markov(p0,rule,middle_size))
+        
+    ei_matrix=np.zeros([generations,size])
+    
+    binary_string = bin(rule)[2:]  # 将十进制数转换为二进制字符串，并去掉前缀'0b'
+    padding_length = 8 - len(binary_string)
+    padded_binary_string = '0' * padding_length + binary_string
+        
+
+    for k in range(generations):
+        next_generation = np.zeros(size)
+        current_part = len(current_generation) // middle_size
+        # 更新每个元胞的状态
+        for i in range(size):
+            index = i // sub_size
+            #print(index)
+            #index=(i**2 + k**2) // 3 % period
+            markov_m = markov_list[index]
+            if i > 0 and i < size-1 :
+                ei = homo_ca_ei(markov_m,middle_size)
+                ei_matrix[k,i] = ei 
+            if i % middle_size == 0:
+                #pattern = int(''.join(str(cell) for cell in current_generation[i-1:i+2]), 2)
+                if len(current_generation[i:i+middle_size+2])== middle_size+2:
+                #print(current_generation[i:i+middle_size+2])
+                    next_generation[i+1:i+middle_size+1] = move(current_generation[i:i+middle_size+2],markov_m,state=1)
+        #next_generation = np.array(next_generation)
+        current_generation = next_generation
+        showmatrix[k+1,:] = current_generation
+            
+    #plt.figure(figsize=(10,18))   
+    plt.imshow(showmatrix, aspect='auto')
+    plt.show()
+    plt.imshow(ei_matrix, aspect='auto',cmap='hot')
+    plt.colorbar()
+    plt.show()
+    
+    return showmatrix,ei_matrix
+
