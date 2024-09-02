@@ -5,6 +5,7 @@ import random
 import matplotlib.pyplot as plt
 import func.entropy_estimators as ee
 from func.EI_calculation import homo_ca_ei
+from func.EI_calculation import local_ei_cell
 
 def trans10_to_base(number, base = 2, min_length=0):
     
@@ -103,27 +104,137 @@ def cellular_automaton_homo(rule, generations = 100,size=100,p0_list=[0],middle_
         # 更新每个元胞的状态
         for i in range(size):
             index = i // sub_size
-            #print(index)
-            #index=(i**2 + k**2) // 3 % period
             markov_m = markov_list[index]
             if i > 0 and i < size-1 :
                 ei = homo_ca_ei(markov_m,middle_size)
                 ei_matrix[k,i] = ei 
             if i % middle_size == 0:
-                #pattern = int(''.join(str(cell) for cell in current_generation[i-1:i+2]), 2)
                 if len(current_generation[i:i+middle_size+2])== middle_size+2:
-                #print(current_generation[i:i+middle_size+2])
                     next_generation[i+1:i+middle_size+1] = move(current_generation[i:i+middle_size+2],markov_m,state=1)
-        #next_generation = np.array(next_generation)
         current_generation = next_generation
         showmatrix[k+1,:] = current_generation
-            
-    #plt.figure(figsize=(10,18))   
+           
+    plt.figure(figsize=(10,10)) 
     plt.imshow(showmatrix, aspect='auto')
     plt.show()
-    plt.imshow(ei_matrix, aspect='auto',cmap='hot')
+    plt.figure(figsize=(10,10)) 
+    plt.imshow(ei_matrix[:, 1:size-middle_size], aspect='auto',cmap='hot')
     plt.colorbar()
     plt.show()
     
     return showmatrix,ei_matrix
+
+
+def cellular_automaton2(rule, generations = 100,size=100,p0_list=[0],middle_size = 1):
+    period=len(p0_list)
+    sub_size= size//period
+    # 初始化元胞状态
+    current_generation = [random.randint(0, 1) for _ in range(size)]
+    showmatrix = np.zeros([generations+1,size])
+    showmatrix[0,:] = current_generation
+    
+    markov_list = []
+    for p0 in p0_list:
+        markov_list.append(generate_markov(p0,rule,middle_size))
+        
+    ei_matrix=np.zeros([generations,size])
+    
+    binary_string = bin(rule)[2:]  # 将十进制数转换为二进制字符串，并去掉前缀'0b'
+    padding_length = 8 - len(binary_string)
+    padded_binary_string = '0' * padding_length + binary_string
+        
+
+    for k in range(generations):
+        next_generation = np.zeros(size)
+        current_part = len(current_generation) // middle_size
+        # 更新每个元胞的状态
+        for i in range(size):
+            index = i // sub_size
+            markov_m = markov_list[index]
+            if i > 0 and i < size - middle_size:
+                e1 = str(int(current_generation[i - 1]))
+                e2 = str(int(current_generation[i + middle_size]))
+                ei, _ = local_ei_cell(middle_size, e1, e2, markov_m, state=1)
+                ei_matrix[k,i] = ei 
+            if i % middle_size == 0:
+                if len(current_generation[i: i+middle_size+2]) == middle_size+2:
+                    next_generation[i+1: i+middle_size+1] = move(current_generation[i:i+middle_size+2],markov_m,state=1)
+        current_generation = next_generation
+        showmatrix[k+1,:] = current_generation
+    
+    plt.figure(figsize=(10,10)) 
+    plt.imshow(showmatrix, aspect='auto')
+    plt.show()
+    plt.figure(figsize=(10,10)) 
+    plt.imshow(ei_matrix[:, 1:size-middle_size], aspect='auto',cmap='hot')
+    plt.colorbar()
+    plt.show()
+    
+    return showmatrix,ei_matrix
+
+
+# def noise_matrix(rows, cols):
+#     # 使用NumPy生成一个列索引网格
+#     col_indices = np.arange(cols)
+    
+#     # 使用NumPy生成一个行索引网格
+#     row_indices = np.arange(rows)
+    
+#     # 使用广播（broadcasting）特性和加法操作生成矩阵
+#     matrix_np = row_indices[:, np.newaxis] + col_indices
+
+#     min_value = 0
+#     max_value = (rows - 1) + (cols - 1)
+#     matrix_normalized_np = (matrix_np - min_value) / (max_value - min_value)
+    
+#     # 调整到[0, 0.5]区间
+#     matrix_normalized_np *= 0.5
+    
+#     return matrix_normalized_np
+    
+# def cellular_automaton_2d(rule, generations = 100, size=100, middle_size = 1):
+#     noises = noise_matrix(generations, size)
+
+#     # 初始化元胞状态
+#     current_generation = [random.randint(0, 1) for _ in range(size)]
+#     showmatrix = np.zeros([generations+1,size])
+#     showmatrix[0,:] = current_generation
+    
+#     markov_array = np.zeros([size, generations, 2**(middle_size+2), 2**middle_size])
+#     for i in range(generations):
+#         for j in range(size):
+#             p0 = noises[i,j]
+#             markov_array[i,j,:,:] = generate_markov(p0,rule,middle_size)
+        
+#     ei_matrix=np.zeros([generations,size])
+    
+#     binary_string = bin(rule)[2:]  # 将十进制数转换为二进制字符串，并去掉前缀'0b'
+#     padding_length = 8 - len(binary_string)
+#     padded_binary_string = '0' * padding_length + binary_string
+        
+
+#     for k in range(generations):
+#         next_generation = np.zeros(size)
+#         current_part = len(current_generation) // middle_size
+#         # 更新每个元胞的状态
+#         for i in range(size):
+#             markov_m = markov_array[k, i]
+#             if i > 0 and i < size-1 :
+#                 ei = homo_ca_ei(markov_m,middle_size)
+#                 ei_matrix[k,i] = ei 
+#             if i % middle_size == 0:
+#                 if len(current_generation[i:i+middle_size+2])== middle_size+2:
+#                     next_generation[i+1:i+middle_size+1] = move(current_generation[i:i+middle_size+2],markov_m,state=1)
+
+#         current_generation = next_generation
+#         showmatrix[k+1,:] = current_generation
+            
+#     #plt.figure(figsize=(10,18))   
+#     plt.imshow(showmatrix, aspect='auto')
+#     plt.show()
+#     plt.imshow(ei_matrix, aspect='auto',cmap='hot')
+#     plt.colorbar()
+#     plt.show()
+    
+#     return showmatrix,ei_matrix
 
