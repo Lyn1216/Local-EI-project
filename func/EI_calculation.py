@@ -72,3 +72,19 @@ def homo_ca_ei(markov_matrix,middle_size,state=1):
             #print(ei0)
             ei += ei0
     return ei / 4
+
+def ei_of_local(markov_matrix,middle_size,state=1):
+    state_size = (state + 1)**(middle_size)
+    mixed_markov = np.zeros([state_size, state_size])
+    for e1 in ['0','1']:
+        for e2 in ['0','1']:
+            local_markov = np.zeros([state_size, state_size])
+            for num in range(state_size):
+                binary_string = trans10_to_base(num, base = state +1, min_length = middle_size)
+                padded_binary_string = e1 + binary_string + e2
+                binary_array = [int(bit) for bit in padded_binary_string] 
+                pattern = int(''.join(str(cell) for cell in binary_array), state+1)
+                local_markov[num, :] = markov_matrix[pattern, :]
+            mixed_markov += local_markov
+    ei = tpm_ei(mixed_markov / 4)
+    return ei, mixed_markov

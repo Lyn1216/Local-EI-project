@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import func.entropy_estimators as ee
 from func.EI_calculation import homo_ca_ei
 from func.EI_calculation import local_ei_cell
+from func.EI_calculation import ei_of_local
 
 def trans10_to_base(number, base = 2, min_length=0):
     
@@ -91,7 +92,8 @@ def cellular_automaton_homo(rule, generations = 100,size=100,p0_list=[0],middle_
     for p0 in p0_list:
         markov_list.append(generate_markov(p0,rule,middle_size))
         
-    ei_matrix=np.zeros([generations,size])
+    ei_matrix1=np.zeros([generations,size])
+    ei_matrix2=np.zeros([generations,size])
     
     binary_string = bin(rule)[2:]  # 将十进制数转换为二进制字符串，并去掉前缀'0b'
     padding_length = 8 - len(binary_string)
@@ -106,23 +108,33 @@ def cellular_automaton_homo(rule, generations = 100,size=100,p0_list=[0],middle_
             index = i // sub_size
             markov_m = markov_list[index]
             if i > 0 and i < size-1 :
-                ei = homo_ca_ei(markov_m,middle_size)
-                ei_matrix[k,i] = ei 
+                ei1 = homo_ca_ei(markov_m,middle_size)
+                ei2, mixed_m = ei_of_local(markov_m,middle_size)
+                #print(mixed_m)
+                ei_matrix1[k,i] = ei1
+                ei_matrix2[k,i] = ei2
             if i % middle_size == 0:
                 if len(current_generation[i:i+middle_size+2])== middle_size+2:
                     next_generation[i+1:i+middle_size+1] = move(current_generation[i:i+middle_size+2],markov_m,state=1)
         current_generation = next_generation
         showmatrix[k+1,:] = current_generation
            
+    syn_matrix = ei_matrix1 - ei_matrix2
     plt.figure(figsize=(10,10)) 
     plt.imshow(showmatrix, aspect='auto')
     plt.show()
     plt.figure(figsize=(10,10)) 
-    plt.imshow(ei_matrix[:, 1:size-middle_size], aspect='auto',cmap='hot')
+    plt.imshow(ei_matrix1[:, 1:size-middle_size], aspect='auto',cmap='hot')
+    plt.colorbar()
+    plt.figure(figsize=(10,10)) 
+    plt.imshow(ei_matrix2[:, 1:size-middle_size], aspect='auto',cmap='hot')
+    plt.colorbar()
+    plt.figure(figsize=(10,10)) 
+    plt.imshow(syn_matrix[:, 1:size-middle_size], aspect='auto',cmap='hot')
     plt.colorbar()
     plt.show()
     
-    return showmatrix,ei_matrix
+    return showmatrix, ei_matrix1, ei_matrix2, syn_matrix
 
 
 def cellular_automaton2(rule, generations = 100,size=100,p0_list=[0],middle_size = 1):
