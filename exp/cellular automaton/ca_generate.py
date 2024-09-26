@@ -80,11 +80,19 @@ def move(strip, markov_matrix,state):
     grid1[0,:] = np.array(list(map(int, list(interval))))
     return grid1
 
-def cellular_automaton_homo(rule, generations = 100,size=100,p0_list=[0],middle_size = 1):
+def cellular_automaton_homo(rule, generations=120, size=120, p0_list=[0], middle_size=1, init="random", figure_show=False):
     period=len(p0_list)
     sub_size= size//period
     # 初始化元胞状态
-    current_generation = [random.randint(0, 1) for _ in range(size)]
+    if init == "random":
+        current_generation = [random.randint(0, 1) for _ in range(size)]
+    else:
+        current_generation = np.zeros(size)
+        if init == "fix_point":
+            current_generation[size//2] = 1
+        elif init == "two_parts":
+            current_generation[:size//2] = np.ones(size//2)
+        
     showmatrix = np.zeros([generations+1,size])
     showmatrix[0,:] = current_generation
     
@@ -120,19 +128,21 @@ def cellular_automaton_homo(rule, generations = 100,size=100,p0_list=[0],middle_
         showmatrix[k+1,:] = current_generation
            
     syn_matrix = ei_matrix1 - ei_matrix2
-    plt.figure(figsize=(10,10)) 
-    plt.imshow(showmatrix, aspect='auto')
-    plt.show()
-    plt.figure(figsize=(10,10)) 
-    plt.imshow(ei_matrix1[:, 1:size-middle_size], aspect='auto',cmap='hot')
-    plt.colorbar()
-    plt.figure(figsize=(10,10)) 
-    plt.imshow(ei_matrix2[:, 1:size-middle_size], aspect='auto',cmap='hot')
-    plt.colorbar()
-    plt.figure(figsize=(10,10)) 
-    plt.imshow(syn_matrix[:, 1:size-middle_size], aspect='auto',cmap='hot')
-    plt.colorbar()
-    plt.show()
+    
+    if figure_show:
+        plt.figure(figsize=(10,10)) 
+        plt.imshow(showmatrix, aspect='auto')
+        plt.show()
+        plt.figure(figsize=(10,10)) 
+        plt.imshow(ei_matrix1[:, 1:size-middle_size], aspect='auto',cmap='hot')
+        plt.colorbar()
+        plt.figure(figsize=(10,10)) 
+        plt.imshow(ei_matrix2[:, 1:size-middle_size], aspect='auto',cmap='hot')
+        plt.colorbar()
+        plt.figure(figsize=(10,10)) 
+        plt.imshow(syn_matrix[:, 1:size-middle_size], aspect='auto',cmap='hot')
+        plt.colorbar()
+        plt.show()
     
     return showmatrix, ei_matrix1, ei_matrix2, syn_matrix
 
