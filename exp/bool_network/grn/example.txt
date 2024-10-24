@@ -1,0 +1,2 @@
+A = (B AND NOT C) OR (NOT B AND C)
+B = C OR D
