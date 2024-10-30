@@ -34,23 +34,65 @@ def tpm_ei(tpm, log_base = 2):
     ei_all = ei_x.mean()
     return ei_all
 
+# def tpm_ei_new(tpm, log_base = 2):
+#     # marginal distribution of y given x ~ Unifrom Dist
+#     puy = tpm.sum(axis=0)
+#     n = tpm.shape[0]
+#     # replace 0 to a small positive number to avoid log error
+#     eps = 1E-10
+#     tpm_e = np.where(tpm==0, eps, tpm)
+#     puy_e = np.where(tpm==0, eps, puy)
+    
+#     # calculate EI of specific x
+#     ei_x = (np.log2(n * tpm_e / puy_e) / np.log2(log_base)  * tpm).sum(axis=1)
+    
+#     det = np.log2(n) + (tpm * np.log2(tpm_e)).mean(axis=0)
+#     deg = np.log2(n) + tpm.mean(axis=0) * np.log2(tpm_e.mean(axis=0))
+#     # calculate total EI
+#     ei_all = ei_x.mean()
+#     return ei_all,det/np.log2(log_base),deg/np.log2(log_base)
+
 def tpm_ei_new(tpm, log_base = 2):
+    '''
+    tpm: 输入的概率转移矩阵，可以是非方阵
+    log_base：对数的底
+
+    ei_all：EI的值
+    det：EI中确定性的部分
+    deg：EI中简并性的部分
+    eff：有效性
+    det_c：确定性系数
+    deg_c：简并性系数
+    '''
     # marginal distribution of y given x ~ Unifrom Dist
-    puy = tpm.sum(axis=0)
-    n = tpm.shape[0]
-    # replace 0 to a small positive number to avoid log error
-    eps = 1E-10
+    puy = tpm.mean(axis=0)
+    m,n = tpm.shape
+    if m > n:
+        q = n
+    else:
+        q = m
+    
+    # replace 0 to a positive number to avoid log error
+    eps = 0.5
     tpm_e = np.where(tpm==0, eps, tpm)
-    puy_e = np.where(tpm==0, eps, puy)
+    puy_e = np.where(puy==0, eps, puy)
     
     # calculate EI of specific x
-    ei_x = (np.log2(n * tpm_e / puy_e) / np.log2(log_base)  * tpm).sum(axis=1)
+    ei_x = (np.log2(tpm_e / puy_e) / np.log2(log_base)  * tpm).sum(axis=1)
     
-    det = np.log2(n) + (tpm * np.log2(tpm_e)).mean(axis=0)
-    deg = np.log2(n) + tpm.mean(axis=0) * np.log2(tpm_e.mean(axis=0))
+    # calculate det and deg
+    det = np.log2(n) + (tpm * np.log2(tpm_e)).sum(axis=1).mean(axis=0)
+    deg = np.log2(n) + (puy * np.log2(puy_e)).sum()
+    
+    det = det / np.log2(log_base)
+    deg = deg / np.log2(log_base)
+
+    det_c = det / np.log2(q) * np.log2(log_base)
+    deg_c = deg / np.log2(q) * np.log2(log_base)
     # calculate total EI
     ei_all = ei_x.mean()
-    return ei_all,det/np.log2(log_base),deg/np.log2(log_base)
+    eff = ei_all / np.log2(q) * np.log2(log_base)
+    return ei_all,det,deg,eff,det_c,deg_c
 
 def local_ei_cell(middle_size, e1, e2, markov_matrix, state = 1):
     state_size = (state + 1)**(middle_size)
