@@ -1,0 +1,1 @@
+A = (A AND NOT N) OR (NOT A AND N)

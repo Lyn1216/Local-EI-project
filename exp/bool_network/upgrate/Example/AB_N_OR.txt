@@ -1,0 +1,2 @@
+A = A OR B OR N
+B = A OR B

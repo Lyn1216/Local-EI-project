@@ -1,0 +1,4 @@
+A = A OR B OR C OR D OR N
+B = A OR B OR C OR D
+C = A OR B OR C OR D
+D = A OR B OR C OR D

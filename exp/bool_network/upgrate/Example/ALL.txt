@@ -1,0 +1,17 @@
+A = A XOR B XOR C XOR E
+B = A XOR B XOR D XOR F
+C = A XOR C XOR E
+D = B XOR D XOR F
+E = A XOR C XOR E
+F = B XOR D XOR F
+
+a = H XOR a XOR h XOR i
+b = b XOR g
+c = c XOR d XOR e XOR g
+d = c XOR d XOR e XOR f XOR g XOR j
+e = c XOR d XOR e
+f = d XOR f XOR i XOR j
+g = b XOR c XOR d XOR g
+h = a XOR h
+i = a XOR f XOR i
+j = J XOR d XOR f XOR j
