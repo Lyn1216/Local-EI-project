@@ -1,3 +1,3 @@
-A = (B AND NOT C) OR (NOT B AND C)
-B = B OR C
+A = B AND NOT C
+B = B AND C
 

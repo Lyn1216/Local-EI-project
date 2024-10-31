@@ -8,6 +8,9 @@ from itertools import product
 from func.EI_calculation import tpm_ei_new
 
 def tpm_one(f_one, inputs, ss, noise):
+    if f_one == []:
+        print("There is an empty F")
+        f_one = [0, 1]
     lens = len(f_one)
     matrix = np.zeros([lens, 2])
     for i in range(lens):
@@ -28,7 +31,11 @@ def tpm_one(f_one, inputs, ss, noise):
     
 def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=False, noise=0):
     F, I, degree, variables, constants = db.text_to_BN(folder='',textfile=textfile)
-    
+    if candidate_sys == "all":
+        candidate_sys = range(len(variables))
+#     print("var224: "+variables[224])
+#     print("F:  "+str(F[224]))
+#     print("I:  "+str(I[224]))
     G = nx.DiGraph()
     all_nodes = variables + constants
     G.add_nodes_from(all_nodes)
@@ -55,21 +62,24 @@ def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=Fal
             print(120 * '-')
 
     if candidate_sys is not None:
+        print("mechanism:    " + ','.join([variables[j] for j in candidate_sys]))
         if len(candidate_sys) <= 5:
             neigbors, tpm = tpm_comb(candidate_sys, F, I, noise)
+            print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
             un = unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
             syn = synergy(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))
+            un_approx = un_comb(candidate_sys, F, I, noise)
+            syn_approx = syn_comb(candidate_sys, F, I, noise)
+            print("un_approx:  " + str(un_approx))
+            print("syn_approx:  " + str(syn_approx))
         else:
             neigbors = nei_comb(candidate_sys, F, I, noise)[0]
+            print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
             un = un_comb(candidate_sys, F, I, noise)
             syn = syn_comb(candidate_sys, F, I, noise)
         vivid = un + syn
-        print("mechanism:    " + ','.join([variables[j] for j in candidate_sys]))
-        print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
-        #print(tpm)
+
         print("un:  " + str(un))
-#         print("un_approx:  " + str())
-#         print("syn_approx:  " + str())
         print("syn:  " + str(syn))
         print("vividness:  " + str(vivid))
         #condi_ei(tpm, len(condidate_sys), len(neigbors)-len(condidate_sys))
@@ -283,10 +293,11 @@ def syn_comb(candidate_system, F, I, noise):
                         str_in = [strs_all[np.where(inputs==n)[0][0]] for n in in_rest]
                         str_in = ''.join(str_in)
                         num_in = int(str_in, 2)
-#                         print(tpm_p.shape)
-#                         print(num_in)
-#                         print(tpm_list[i].shape)
-#                         print(num)
+#                         print("sys:"+str(s))
+#                         print("tpm_p:"+str(tpm_p.shape))
+#                         print("num_in:"+str(num_in))
+#                         print("tpm_all:"+str(tpm_list[i].shape))
+#                         print("num:"+str(num))
                         tpm_p[num_in, :] = tpm_list[i][num, :]
                 condi += tpm_ei_new(tpm_p)[0]
             syn += condi / 2**len(eu_list)
