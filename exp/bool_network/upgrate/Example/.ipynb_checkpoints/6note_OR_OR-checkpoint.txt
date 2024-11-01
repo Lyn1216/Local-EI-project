@@ -1,0 +1,6 @@
+A = A OR B OR C OR E
+B = A OR B OR D OR F
+C = A OR C OR E
+D = B OR D OR F
+E = A OR C OR E
+F = B OR D OR F

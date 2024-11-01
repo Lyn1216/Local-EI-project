@@ -1,6 +1,6 @@
+import grn.load_database13 as db
 import sys
 sys.path.append("../../..")
-import load_database13 as db
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -28,14 +28,12 @@ def tpm_one(f_one, inputs, ss, noise):
         en_size = len(inputs) - 1
         all_inputs = inputs
     return matrix, en_size, all_inputs
-    
-def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=False, noise=0):
+
+def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=False, noise=0, save_onenote = False):
     F, I, degree, variables, constants = db.text_to_BN(folder='',textfile=textfile)
     if candidate_sys == "all":
         candidate_sys = range(len(variables))
-#     print("var224: "+variables[224])
-#     print("F:  "+str(F[224]))
-#     print("I:  "+str(I[224]))
+
     G = nx.DiGraph()
     all_nodes = variables + constants
     G.add_nodes_from(all_nodes)
@@ -49,22 +47,34 @@ def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=Fal
     plt.show()
     print("all intrinsic variables: " + ','.join(variables))
     print("external parameters:" + ','.join(constants))
-    if fill_onenode is False:
+    if save_onenote is True :
+        onenote_tpm_result = {}
+        onenote_un_result = {}
+        onenote_syn_result = {}
+        onenote_vividness_result = {}
         for i in range(len(variables)):
             tpm1, en_size, _ = tpm_one(F[i], I[i], i, noise=noise)
-            print("mechanism:    " + variables[i])
-            print("environment:    " + ','.join([all_nodes[j] for j in I[i]]))
-            print(tpm1)
-            print("un:  " + str(unique(tpm1, 1, en_size)[0]))
-            print("syn:  " + str(synergy(tpm1, 1, en_size)))
-            print("vividness:  " + str(condi_ei(tpm1, 1, en_size)))
-            print("en_un:  " + str(en_unique(tpm1, 1, en_size)[0]))
-            print(120 * '-')
+            onenote_tpm_result[variables[i]] = tpm1
+            onenote_un_result[variables[i]] = unique(tpm1, 1, en_size)[0]
+            onenote_syn_result[variables[i]] = synergy(tpm1, 1, en_size)
+            onenote_vividness_result[variables[i]] = condi_ei(tpm1, 1, en_size)
+            if fill_onenode  is False:
+                print("mechanism:    " + variables[i])
+                print("environment:    " + ','.join([all_nodes[j] for j in I[i]]))
+                print(tpm1)
+                print("un:  " + str(unique(tpm1, 1, en_size)[0]))
+                print("syn:  " + str(synergy(tpm1, 1, en_size)))
+                print("vividness:  " + str(condi_ei(tpm1, 1, en_size)))
+                print(120 * '-')
+            else:
+                continue
 
     if candidate_sys is not None:
         print("mechanism:    " + ','.join([variables[j] for j in candidate_sys]))
         if len(candidate_sys) <= 5:
             neigbors, tpm = tpm_comb(candidate_sys, F, I, noise)
+            print("tpm: ")
+            print(tpm)
             print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
             un = unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
             syn = synergy(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))
@@ -84,6 +94,7 @@ def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=Fal
         print("vividness:  " + str(vivid))
         #condi_ei(tpm, len(condidate_sys), len(neigbors)-len(condidate_sys))
         print(120 * '-')
+        return tpm, un, syn, vivid, onenote_tpm_result, onenote_un_result, onenote_syn_result, onenote_vividness_result
 
 def permute_matrix_rows(original_order, new_order):
     # 原始和新顺序的长度（应该是3）
@@ -141,18 +152,23 @@ def nei_comb(candidate_system, F, I, noise):
         tpm, size, ins = tpm_one(F[i], I[i], i, noise=noise)
         tpm_list.append(tpm)
         all_in_list.append(ins)
-    neigbors = np.unique(neigbors)
+    #neigbors = np.unique(neigbors)
+    seen = set()
+    neigbors_un = [x for x in neigbors if not (x in seen or seen.add(x))]
+    print(neigbors_un)
     neigbors_ = np.setdiff1d(neigbors, candidate_system)
-    return neigbors, tpm_list, neigbors_, all_in_list
+    return neigbors_un, tpm_list, neigbors_, all_in_list
 
 def tpm_comb(candidate_system, F, I, noise):
     neigbors, tpm_list, _, _ = nei_comb(candidate_system, F, I, noise)
     matrix = np.ones([2**len(neigbors), 2**len(candidate_system)])
     for i, s in enumerate(candidate_system):
         new_arr = add_missing_elements(neigbors, I[s])
+        print("new_arr")
+        print(new_arr)
         while tpm_list[i].shape[0] < matrix.shape[0]:
             tpm_list[i] = np.tile(tpm_list[i], (2, 1))
-        mapping = permute_matrix_rows(new_arr, neigbors)
+        mapping = permute_matrix_rows(neigbors, new_arr)
         new_id = [int(index,2) for index in mapping]
         tpm_list[i] = tpm_list[i][new_id]
     for i in range(matrix.shape[1]):
