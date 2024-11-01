@@ -1,4 +1,3 @@
-import grn.load_database13 as db
 import sys
 sys.path.append("../../..")
 import numpy as np
@@ -6,6 +5,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from itertools import product
 from func.EI_calculation import tpm_ei_new
+import func.load_database13 as db
 
 def tpm_one(f_one, inputs, ss, noise):
     if f_one == []:
@@ -47,11 +47,11 @@ def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=Fal
     plt.show()
     print("all intrinsic variables: " + ','.join(variables))
     print("external parameters:" + ','.join(constants))
+    onenote_tpm_result = {}
+    onenote_un_result = {}
+    onenote_syn_result = {}
+    onenote_vividness_result = {}
     if save_onenote is True :
-        onenote_tpm_result = {}
-        onenote_un_result = {}
-        onenote_syn_result = {}
-        onenote_vividness_result = {}
         for i in range(len(variables)):
             tpm1, en_size, _ = tpm_one(F[i], I[i], i, noise=noise)
             onenote_tpm_result[variables[i]] = tpm1
@@ -155,7 +155,7 @@ def nei_comb(candidate_system, F, I, noise):
     #neigbors = np.unique(neigbors)
     seen = set()
     neigbors_un = [x for x in neigbors if not (x in seen or seen.add(x))]
-    print(neigbors_un)
+#     print(neigbors_un)
     neigbors_ = np.setdiff1d(neigbors, candidate_system)
     return neigbors_un, tpm_list, neigbors_, all_in_list
 
@@ -164,8 +164,8 @@ def tpm_comb(candidate_system, F, I, noise):
     matrix = np.ones([2**len(neigbors), 2**len(candidate_system)])
     for i, s in enumerate(candidate_system):
         new_arr = add_missing_elements(neigbors, I[s])
-        print("new_arr")
-        print(new_arr)
+#         print("new_arr")
+#         print(new_arr)
         while tpm_list[i].shape[0] < matrix.shape[0]:
             tpm_list[i] = np.tile(tpm_list[i], (2, 1))
         mapping = permute_matrix_rows(neigbors, new_arr)
