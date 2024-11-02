@@ -1,0 +1,3 @@
+A = B AND NOT C
+B = B AND C
+

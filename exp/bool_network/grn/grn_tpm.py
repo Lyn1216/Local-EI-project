@@ -84,6 +84,7 @@ def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=Fal
             print("syn_approx:  " + str(syn_approx))
         else:
             neigbors = nei_comb(candidate_sys, F, I, noise)[0]
+            tpm = "None"
             print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
             un = un_comb(candidate_sys, F, I, noise)
             syn = syn_comb(candidate_sys, F, I, noise)
