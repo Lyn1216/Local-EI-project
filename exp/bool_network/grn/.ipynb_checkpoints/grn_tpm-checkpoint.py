@@ -29,7 +29,7 @@ def tpm_one(f_one, inputs, ss, noise):
         all_inputs = inputs
     return matrix, en_size, all_inputs
 
-def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=False, noise=0, save_onenote = False):
+def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=False, noise=0, save_onenote = True):
     F, I, degree, variables, constants = db.text_to_BN(folder='',textfile=textfile)
     if candidate_sys == "all":
         candidate_sys = range(len(variables))
@@ -84,6 +84,7 @@ def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=Fal
             print("syn_approx:  " + str(syn_approx))
         else:
             neigbors = nei_comb(candidate_sys, F, I, noise)[0]
+            tpm = "None"
             print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
             un = un_comb(candidate_sys, F, I, noise)
             syn = syn_comb(candidate_sys, F, I, noise)

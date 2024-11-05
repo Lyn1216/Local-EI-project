@@ -1,101 +1,100 @@
-import sys
-sys.path.append("../../..")
 import numpy as np
-import networkx as nx
-import matplotlib.pyplot as plt
-from itertools import product
-from func.EI_calculation import tpm_ei_new
-import func.load_database13 as db
+import pandas as pd
+import itertools
+import seaborn as sns
 
-def tpm_one(f_one, inputs, ss, noise):
-    if f_one == []:
-        print("There is an empty F")
-        f_one = [0, 1]
-    lens = len(f_one)
-    matrix = np.zeros([lens, 2])
-    for i in range(lens):
-        if f_one[i] == 0:
-            matrix[i, 0] = 1 - noise
-        else:
-            matrix[i, 0] = noise
-        matrix[i, 1] = 1 - matrix[i, 0]
-        
-    if ss not in inputs:
-        matrix = np.tile(matrix, (2, 1))
-        en_size = len(inputs)
-        all_inputs = np.concatenate(([ss], inputs))
-    else:
-        en_size = len(inputs) - 1
-        all_inputs = inputs
-    return matrix, en_size, all_inputs
+def value_boolnet(symbol_boolnet, weights):
+    results = {key: weights[w] for key, w in symbol_boolnet.items()}
+    return results
 
-def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=False, noise=0, save_onenote = True):
-    F, I, degree, variables, constants = db.text_to_BN(folder='',textfile=textfile)
-    if candidate_sys == "all":
-        candidate_sys = range(len(variables))
+def get_vars(boolnet):
+    """
+    Extract variables form Bool net representation
+    """
+    vars = set()
+    for edge in boolnet.keys():
+        vars.update(edge)
+    assert ''.join(vars).isupper()
+    return vars
 
-    G = nx.DiGraph()
-    all_nodes = variables + constants
-    G.add_nodes_from(all_nodes)
+
+def get_wm(boolnet, vars):
+    """
+    Get weights matrix
+    """
+    dim = len(vars)
+    # make weights matrix
+    wm = pd.DataFrame(np.zeros((dim, dim)), columns=vars, index=vars)
+    for s, e in boolnet:
+        wm.loc[s, e] = boolnet[(s, e)]
+    return wm.values
+
+
+def get_states(vars, big_endian=False):
+    """
+    Using upper case and lower case of variable name to represent 2 states of the variable
+    and return the full set of combination states of multiple variables
+    E.g. ['A', 'B'] -> [('a', 'b'), ('A', 'b'), ('a', 'B'), ('A', 'B') ]
+         ['Ab', 'Cd'] -> [('ab', 'cd'), ('AB', 'cd'), ('ab', 'CD'), ('AB', 'CD')]
+    @param
+    """
+
+    order = 1 if big_endian else -1
+    values = [[v.lower(), v.upper()] for v in vars[::order]]
+    combinations = list(itertools.product(*values))
+    result = [combination[::order] for combination in combinations]
+    return result
+
+
+def state_name(state):
+    """
+    E.g. ('A', 'B', 'C') -> 'ABC'
+    """
+    return ''.join(state)
+
+
+def get_state_values(state):
+    """
+    assign 1 if all characters of state name are upper case, else -1.
+    E.g. ('A', 'B', 'c') -> (1, 1, -1)
+         ('AB', 'cd') -> (1, -1)
+    """
+    values = np.array([1 if v.isupper() else -1 for v in state])
+    return values
+
+def make_tpm(bnet, w, k=1):
+    boolnet = value_boolnet(bnet, w)
+    vars = list(get_vars(boolnet))
+    states = get_states(vars)
+    wm = get_wm(boolnet, vars)
+    n = len(states)
+    s_values = np.array([get_state_values(s) for s in states])
     
-    for i in range(len(variables)):
-        for j in I[i]:
-            G.add_edges_from([(all_nodes[j], variables[i])])
+    # state to unit value transition probabilities
+    states_to_units_pos_tpm = 1. / (1. + np.exp(-k * s_values @ wm))
+    states_to_units_neg_tpm = 1. - states_to_units_pos_tpm
+    states_to_units_tpm = np.concatenate([states_to_units_pos_tpm, states_to_units_neg_tpm], axis=1)
+    pos_vars = [v.upper() for v in vars]
+    neg_vars = [v.lower() for v in vars]
+    states_names = [state_name(s) for s in states]
+    states_to_units_tpm_df = pd.DataFrame(states_to_units_tpm, columns=pos_vars+neg_vars, index=states_names)
     
-    pos = nx.spring_layout(G)  # 为图形设置布局
-    nx.draw(G, pos, with_labels=True, node_color='skyblue', node_size=700, edge_color='k', linewidths=1, font_size=15)
-    plt.show()
-    print("all intrinsic variables: " + ','.join(variables))
-    print("external parameters:" + ','.join(constants))
-    onenote_tpm_result = {}
-    onenote_un_result = {}
-    onenote_syn_result = {}
-    onenote_vividness_result = {}
-    if save_onenote is True :
-        for i in range(len(variables)):
-            tpm1, en_size, _ = tpm_one(F[i], I[i], i, noise=noise)
-            onenote_tpm_result[variables[i]] = tpm1
-            onenote_un_result[variables[i]] = unique(tpm1, 1, en_size)[0]
-            onenote_syn_result[variables[i]] = synergy(tpm1, 1, en_size)
-            onenote_vividness_result[variables[i]] = condi_ei(tpm1, 1, en_size)
-            if fill_onenode  is False:
-                print("mechanism:    " + variables[i])
-                print("environment:    " + ','.join([all_nodes[j] for j in I[i]]))
-                print(tpm1)
-                print("un:  " + str(unique(tpm1, 1, en_size)[0]))
-                print("syn:  " + str(synergy(tpm1, 1, en_size)))
-                print("vividness:  " + str(condi_ei(tpm1, 1, en_size)))
-                print(120 * '-')
-            else:
-                continue
+    # states: cartesian product of unit probabilitys
+    states_tpm = states_to_units_tpm_df.apply(
+        lambda row: pd.Series(
+            data=[np.array([row[u] for u in s]).prod() for s in states], 
+            index=states_names
+        ), axis=1)
+    sns.heatmap(states_tpm, annot=True, fmt='.2f', cmap='Greys')
+    return states_tpm, states_tpm.values
 
-    if candidate_sys is not None:
-        print("mechanism:    " + ','.join([variables[j] for j in candidate_sys]))
-        if len(candidate_sys) <= 5:
-            neigbors, tpm = tpm_comb(candidate_sys, F, I, noise)
-            print("tpm: ")
-            print(tpm)
-            print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
-            un = unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
-            syn = synergy(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))
-            un_approx = un_comb(candidate_sys, F, I, noise)
-            syn_approx = syn_comb(candidate_sys, F, I, noise)
-            print("un_approx:  " + str(un_approx))
-            print("syn_approx:  " + str(syn_approx))
-        else:
-            neigbors = nei_comb(candidate_sys, F, I, noise)[0]
-            tpm = "None"
-            print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
-            un = un_comb(candidate_sys, F, I, noise)
-            syn = syn_comb(candidate_sys, F, I, noise)
-        vivid = un + syn
 
-        print("un:  " + str(un))
-        print("syn:  " + str(syn))
-        print("vividness:  " + str(vivid))
-        #condi_ei(tpm, len(condidate_sys), len(neigbors)-len(condidate_sys))
-        print(120 * '-')
-        return tpm, un, syn, vivid, onenote_tpm_result, onenote_un_result, onenote_syn_result, onenote_vividness_result
+
+
+
+
+
+
 
 def permute_matrix_rows(original_order, new_order):
     # 原始和新顺序的长度（应该是3）
