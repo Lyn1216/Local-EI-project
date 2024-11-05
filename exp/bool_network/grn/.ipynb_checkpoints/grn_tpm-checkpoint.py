@@ -29,8 +29,8 @@ def tpm_one(f_one, inputs, ss, noise):
         all_inputs = inputs
     return matrix, en_size, all_inputs
 
-def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=False, noise=0, save_onenote = True):
-    F, I, degree, variables, constants = db.text_to_BN(folder='',textfile=textfile)
+def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fill_onenode=False, noise=0, save_onenote = True):
+    F, I, degree, variables, constants = db.text_to_BN(folder=folder,textfile=textfile)
     if candidate_sys == "all":
         candidate_sys = range(len(variables))
 
@@ -71,17 +71,19 @@ def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=Fal
 
     if candidate_sys is not None:
         print("mechanism:    " + ','.join([variables[j] for j in candidate_sys]))
-        if len(candidate_sys) <= 5:
+        if len(candidate_sys) <= 8:
             neigbors, tpm = tpm_comb(candidate_sys, F, I, noise)
             print("tpm: ")
             print(tpm)
             print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
             un = unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
+            un_en = en_unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
             syn = synergy(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))
-            un_approx = un_comb(candidate_sys, F, I, noise)
-            syn_approx = syn_comb(candidate_sys, F, I, noise)
-            print("un_approx:  " + str(un_approx))
-            print("syn_approx:  " + str(syn_approx))
+#             un_approx = un_comb(candidate_sys, F, I, noise)
+#             syn_approx = syn_comb(candidate_sys, F, I, noise)
+#             print("un_approx:  " + str(un_approx))
+#             print("syn_approx:  " + str(syn_approx))
+        
         else:
             neigbors = nei_comb(candidate_sys, F, I, noise)[0]
             tpm = "None"
@@ -91,6 +93,7 @@ def text_bn_graph(textfile = 'example.txt', candidate_sys=None, fill_onenode=Fal
         vivid = un + syn
 
         print("un:  " + str(un))
+        print("un_en:  " + str(un_en))
         print("syn:  " + str(syn))
         print("vividness:  " + str(vivid))
         #condi_ei(tpm, len(condidate_sys), len(neigbors)-len(condidate_sys))

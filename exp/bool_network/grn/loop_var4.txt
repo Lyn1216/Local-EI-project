@@ -1,0 +1,4 @@
+A = ( NOT E ) OR B 
+B = ( NOT E ) OR C
+C = ( NOT E ) OR D
+D = ( NOT E ) OR A
