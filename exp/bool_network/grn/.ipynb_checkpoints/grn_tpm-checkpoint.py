@@ -56,15 +56,15 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fil
             tpm1, en_size, _ = tpm_one(F[i], I[i], i, noise=noise)
             onenote_tpm_result[variables[i]] = tpm1
             onenote_un_result[variables[i]] = unique(tpm1, 1, en_size)[0]
-            onenote_syn_result[variables[i]] = synergy(tpm1, 1, en_size)
+            onenote_syn_result[variables[i]] = synergy(tpm1, 1, en_size)[0]
             onenote_vividness_result[variables[i]] = condi_ei(tpm1, 1, en_size)
             if fill_onenode  is False:
                 print("mechanism:    " + variables[i])
                 print("environment:    " + ','.join([all_nodes[j] for j in I[i]]))
                 print(tpm1)
                 print("un:  " + str(unique(tpm1, 1, en_size)[0]))
-                print("syn:  " + str(synergy(tpm1, 1, en_size)))
-                print("vividness:  " + str(condi_ei(tpm1, 1, en_size)))
+                print("syn:  " + str(synergy(tpm1, 1, en_size)[0]))
+                #print("vividness:  " + str(condi_ei(tpm1, 1, en_size)))
                 print(120 * '-')
             else:
                 continue
@@ -78,7 +78,7 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fil
             print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
             un = unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
             un_en = en_unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
-            syn = synergy(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))
+            syn = synergy(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
 #             un_approx = un_comb(candidate_sys, F, I, noise)
 #             syn_approx = syn_comb(candidate_sys, F, I, noise)
 #             print("un_approx:  " + str(un_approx))
@@ -95,7 +95,7 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fil
         print("un:  " + str(un))
         print("un_en:  " + str(un_en))
         print("syn:  " + str(syn))
-        print("vividness:  " + str(vivid))
+        #print("vividness:  " + str(vivid))
         #condi_ei(tpm, len(condidate_sys), len(neigbors)-len(condidate_sys))
         print(120 * '-')
         return tpm, un, syn, vivid, onenote_tpm_result, onenote_un_result, onenote_syn_result, onenote_vividness_result
@@ -200,26 +200,29 @@ def tpm_ei(tpm, log_base = 2):
 
 
 def synergy(markov_matrix, mech_size, en_size):
-    ei_all = condi_ei(markov_matrix, mech_size, en_size)
+    ei_all, tpm_dic = condi_ei(markov_matrix, mech_size, en_size)
     un = unique(markov_matrix, mech_size, en_size)[0]
     syn = ei_all - un
-    return syn
+    return syn, tpm_dic
 
 def condi_ei(markov_matrix, mech_size, en_size):
     ei = 0
     state_size = 2**mech_size
     state_en = 2**en_size
+    tpm_dic = {}
     for e in range(state_en):
         local_markov = np.zeros([state_size, state_size])
+        en_str = decimal_to_binary(e, min_length=en_size)
         for num in range(state_size):
             binary_string = decimal_to_binary(num, min_length=mech_size)
-            padded_binary_string = binary_string + decimal_to_binary(e, min_length=en_size)
+            padded_binary_string = binary_string + en_str
             binary_array = [int(bit) for bit in padded_binary_string] 
             pattern = int(''.join(str(cell) for cell in binary_array), 2)
             local_markov[num, :] = markov_matrix[pattern, :]
         ei += tpm_ei(local_markov)
+        tpm_dic[en_str] = local_markov
     ei = ei / state_en
-    return ei 
+    return ei, tpm_dic 
 
 def unique(markov_matrix, mech_size, en_size):
     state_size = 2**mech_size
@@ -323,3 +326,27 @@ def syn_comb(candidate_system, F, I, noise):
             syn += condi / 2**len(eu_list)
             syn -= tpm_ei_new(partition(tpm_list[i], all_in_list[i], eu_list))[0]
     return syn
+
+def tpm_to_dis(tpm, mech_size, en_size):
+    state_size = 2**mech_size
+    state_en = 2**en_size
+    tpm_dis = np.zeros([state_size*state_en, state_size])
+    for e in range(state_en):
+        for num in range(state_size):
+            binary_string = decimal_to_binary(num, min_length=mech_size)
+            padded_binary_string = binary_string + decimal_to_binary(e, min_length=en_size)
+            binary_array = [int(bit) for bit in padded_binary_string] 
+            pattern = int(''.join(str(cell) for cell in binary_array), 2)
+            tpm_dis[:, num] += tpm[:, pattern]
+    return tpm_dis
+
+def iit_tpm_cal(tpm_v, mech_size, en_size):
+    tpm_dis = tpm_to_dis(tpm_v, mech_size, en_size)
+    un = unique(tpm_dis, mech_size, en_size)[0]
+    syn, tpm_dic = synergy(tpm_dis, mech_size, en_size)
+    un_en = en_unique(tpm_dis, mech_size, en_size)[0]
+    print("un:  " + str(un))
+    print("un_en:  " + str(un_en))
+    print("syn:  " + str(syn))
+    return un, un_en, syn, tpm_dic
+    

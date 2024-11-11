@@ -1,0 +1,3 @@
+K = L AND NOT M
+L = NOT K AND M
+M = K OR L
