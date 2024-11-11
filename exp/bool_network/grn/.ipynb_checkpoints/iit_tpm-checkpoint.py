@@ -89,9 +89,30 @@ def make_tpm(bnet, w, k=1, image_show=False):
         sns.heatmap(states_tpm, annot=True, fmt='.2f', cmap='Greys')
     return states_tpm, states_tpm.values
 
+def decimal_to_binary(decimal, min_length=1):
+    if min_length == 0:
+        return ''
+    if decimal == 0:
+        return "0" if min_length == 1 else "0".zfill(min_length)
+    binary = ""
+    while decimal > 0:
+        binary = str(decimal % 2) + binary
+        decimal = decimal // 2
+    # 使用 zfill 确保二进制字符串至少有 min_length 长度
+    return binary.zfill(min_length)
 
-
-
+def tpm_series(tpm, init_state, steps, seed = 42):
+    np.random.seed(seed)
+    init_num = int(init_state, 2)
+    serie = [init_num]
+    serie_str = [init_state]
+    for t in range(steps):
+        num = serie[t]
+        probabilities = tpm[num, :]
+        sample = np.random.choice(range(len(probabilities)), p=probabilities)
+        serie.append(sample)
+        serie_str.append(decimal_to_binary(sample, min_length=int(np.log2(len(probabilities)))))
+    return serie, serie_str
 
 
 
