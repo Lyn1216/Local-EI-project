@@ -78,18 +78,15 @@ def move(strip, markov_matrix,state):
     grid1[0,:] = np.array(list(map(int, list(interval))))
     return grid1
 
-def cellular_automaton_homo(rule, generations=120, size=120, p0_list=[0], mech_size=1, init="random", figure_show=False):
+def cellular_automaton_homo(rule, generations=120, size=120, p0_list=[0], mech_size=1, init=0, figure_show=False, vivid=False):
     period=len(p0_list)
     sub_size= size//period
-    # 初始化元胞状态
+#     # 初始化元胞状态
     if init == "random":
         current_generation = [random.randint(0, 1) for _ in range(size)]
     else:
-        current_generation = np.zeros(size)
-        if init == "fix_point":
-            current_generation[size//2] = 1
-        elif init == "two_parts":
-            current_generation[:size//2] = np.ones(size//2)
+        current_str = trans10_to_base(init, min_length=size)
+        current_generation = [int(i) for i in current_str]
         
     showmatrix = np.zeros([generations+1,size])
     showmatrix[0,:] = current_generation
@@ -114,7 +111,7 @@ def cellular_automaton_homo(rule, generations=120, size=120, p0_list=[0], mech_s
         for i in range(size):
             index = i // sub_size
             markov_m = markov_list[index]
-            if i > 0 and i < size-1 :
+            if i > 0 and i < size-1 and vivid:
                 un = unique_ca(markov_m, mech_size)[0]
                 syn = synergy_ca(markov_m, mech_size)
                 un_en = en_unique_ca(markov_m, mech_size)[0]
