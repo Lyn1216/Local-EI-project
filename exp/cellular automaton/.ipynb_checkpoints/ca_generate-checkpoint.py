@@ -87,9 +87,11 @@ def cellular_automaton_homo(rule, generations=120, size=120, p0_list=[0], mech_s
     else:
         current_str = trans10_to_base(init, min_length=size)
         current_generation = [int(i) for i in current_str]
+        init_generation = current_generation.copy()
         
     showmatrix = np.zeros([generations+1,size])
     showmatrix[0,:] = current_generation
+
     
     markov_list = []
     for p0 in p0_list:
@@ -105,7 +107,7 @@ def cellular_automaton_homo(rule, generations=120, size=120, p0_list=[0], mech_s
         
 
     for k in range(generations):
-        next_generation = np.zeros(size)
+        next_generation = init_generation #np.zeros(size)
         current_part = len(current_generation) // mech_size
         # 更新每个元胞的状态
         for i in range(size):
