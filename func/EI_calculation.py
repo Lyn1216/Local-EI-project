@@ -94,35 +94,30 @@ def tpm_ei_new(tpm, log_base = 2):
     eff = ei_all / np.log2(q) * np.log2(log_base)
     return ei_all,det,deg,eff,det_c,deg_c
 
-def local_ei_cell(middle_size, e1, e2, markov_matrix, state = 1):
-    state_size = (state + 1)**(middle_size)
-    local_markov = np.zeros([state_size, state_size])
-    for num in range(state_size):
-        binary_string = trans10_to_base(num, base = state +1, min_length = middle_size)
-        padded_binary_string = e1 + binary_string + e2
-        binary_array = [int(bit) for bit in padded_binary_string] 
-        pattern = int(''.join(str(cell) for cell in binary_array), state+1)
-        local_markov[num, :] = markov_matrix[pattern, :]
-    ei = tpm_ei(local_markov, log_base = state+1)
-    return ei, local_markov 
-
-def homo_ca_ei(markov_matrix,middle_size,state=1):
+def condi_ei(markov_matrix,mech_size,state=1):
     ei = 0
+    state_size = (state + 1)**(mech_size)
     for e1 in ['0','1']:
         for e2 in ['0','1']:
-            ei0,_ = local_ei_cell(middle_size,e1,e2,markov_matrix,state)
-            #print(ei0)
+            local_markov = np.zeros([state_size, state_size])
+            for num in range(state_size):
+                binary_string = trans10_to_base(num, base = state +1, min_length = mech_size)
+                padded_binary_string = e1 + binary_string + e2
+                binary_array = [int(bit) for bit in padded_binary_string] 
+                pattern = int(''.join(str(cell) for cell in binary_array), state+1)
+                local_markov[num, :] = markov_matrix[pattern, :]
+            ei0 = tpm_ei(local_markov, log_base = state+1)
             ei += ei0
     return ei / 4
 
-def ei_of_local(markov_matrix,middle_size,state=1):
-    state_size = (state + 1)**(middle_size)
+def unique_ca(markov_matrix, mech_size, state=1):
+    state_size = (state + 1)**(mech_size)
     mixed_markov = np.zeros([state_size, state_size])
     for e1 in ['0','1']:
         for e2 in ['0','1']:
             local_markov = np.zeros([state_size, state_size])
             for num in range(state_size):
-                binary_string = trans10_to_base(num, base = state +1, min_length = middle_size)
+                binary_string = trans10_to_base(num, base = state +1, min_length = mech_size)
                 padded_binary_string = e1 + binary_string + e2
                 binary_array = [int(bit) for bit in padded_binary_string] 
                 pattern = int(''.join(str(cell) for cell in binary_array), state+1)
@@ -130,3 +125,25 @@ def ei_of_local(markov_matrix,middle_size,state=1):
             mixed_markov += local_markov
     ei = tpm_ei(mixed_markov / 4)
     return ei, mixed_markov
+
+def en_unique_ca(markov_matrix, mech_size):
+    state_size = 2**mech_size
+    mixed_markov = np.zeros([4, state_size])
+    for num in range(state_size):
+        local_markov = np.zeros([4, state_size])
+        for e1 in ['0','1']:
+            for e2 in ['0','1']:
+                binary_string = trans10_to_base(num, base = 2, min_length = mech_size)
+                padded_binary_string = e1 + binary_string + e2 
+                binary_array = [int(bit) for bit in padded_binary_string] 
+                pattern = int(''.join(str(cell) for cell in binary_array), 2)
+                local_markov[num, :] = markov_matrix[pattern, :]
+        mixed_markov += local_markov
+    ei,det,deg,eff,det_c,deg_c = tpm_ei_new(mixed_markov / state_size)
+    return ei, mixed_markov
+
+def synergy_ca(markov_matrix, mech_size):
+    ei_all = condi_ei(markov_matrix,mech_size)
+    un = unique_ca(markov_matrix,mech_size)[0]
+    syn = ei_all - un
+    return syn
