@@ -345,8 +345,8 @@ def iit_tpm_cal(tpm_v, mech_size, en_size):
     un = unique(tpm_dis, mech_size, en_size)[0]
     syn, tpm_dic = synergy(tpm_dis, mech_size, en_size)
     un_en = en_unique(tpm_dis, mech_size, en_size)[0]
-    print("un:  " + str(un))
-    print("un_en:  " + str(un_en))
-    print("syn:  " + str(syn))
+#     print("un:  " + str(un))
+#     print("un_en:  " + str(un_en))
+#     print("syn:  " + str(syn))
     return un, un_en, syn, tpm_dic
     

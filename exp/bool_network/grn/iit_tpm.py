@@ -15,6 +15,7 @@ def get_vars(boolnet):
     for edge in boolnet.keys():
         vars.update(edge)
     assert ''.join(vars).isupper()
+    vars = sorted(list(vars))
     return vars
 
 
@@ -30,7 +31,7 @@ def get_wm(boolnet, vars):
     return wm.values
 
 
-def get_states(vars, big_endian=False):
+def get_states(vars, big_endian=True):
     """
     Using upper case and lower case of variable name to represent 2 states of the variable
     and return the full set of combination states of multiple variables
