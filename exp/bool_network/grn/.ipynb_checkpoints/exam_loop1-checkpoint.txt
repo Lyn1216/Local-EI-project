@@ -1,3 +1,0 @@
-A = ( A AND D ) OR B 
-B = ( B AND D )
-C = ( C AND D ) 

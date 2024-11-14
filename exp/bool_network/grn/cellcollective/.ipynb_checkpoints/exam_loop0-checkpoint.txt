@@ -1,0 +1,3 @@
+A = ( A AND D )
+B = ( B AND D )
+C = ( C AND D )
