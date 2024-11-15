@@ -4,7 +4,7 @@ import itertools
 import seaborn as sns
 
 def value_boolnet(symbol_boolnet, weights):
-    results = {key: weights[w] for key, w in symbol_boolnet.items()}
+    results = {key: weights.get(w, 0) for key, w in symbol_boolnet.items()}
     return results
 
 def get_vars(boolnet):
@@ -29,6 +29,17 @@ def get_wm(boolnet, vars):
     for s, e in boolnet:
         wm.loc[s, e] = boolnet[(s, e)]
     return wm.values
+
+# def get_wm2(boolnet, vars):
+#     """
+#     Get weights matrix
+#     """
+#     dim = len(vars)
+#     # make weights matrix
+#     wm = np.zeros((dim, dim, dim))
+#     for s1, s2, e in boolnet:
+#         wm[s1, s2, e] = boolnet[(s1, s2, e)]
+#     return wm.values
 
 
 def get_states(vars, big_endian=True):
@@ -63,16 +74,21 @@ def get_state_values(state):
     values = np.array([1 if v.isupper() else -1 for v in state])
     return values
 
-def make_tpm(bnet, w, k=1, image_show=False):
+def make_tpm(bnet, w, k=1, image_show=False, syn_term=False):
     boolnet = value_boolnet(bnet, w)
     vars = list(get_vars(boolnet))
     states = get_states(vars)
-    wm = get_wm(boolnet, vars)
     n = len(states)
     s_values = np.array([get_state_values(s) for s in states])
-    
-    # state to unit value transition probabilities
-    states_to_units_pos_tpm = 1. / (1. + np.exp(-k * s_values @ wm))
+    if syn_term:
+        u = s_values.reshape(-1,1)
+        uu = u @ u.T
+        wm = get_wm2(boolnet, vars)
+        states_to_units_pos_tpm = 1. / (1. + np.exp(-k * uu.reshape(-1) @ wm.reshape(n*n,-1)))
+    else:
+        wm = get_wm(boolnet, vars)
+        states_to_units_pos_tpm = 1. / (1. + np.exp(-k * s_values @ wm))
+        
     states_to_units_neg_tpm = 1. - states_to_units_pos_tpm
     states_to_units_tpm = np.concatenate([states_to_units_pos_tpm, states_to_units_neg_tpm], axis=1)
     pos_vars = [v.upper() for v in vars]
