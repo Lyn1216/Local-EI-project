@@ -98,7 +98,7 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fil
         #print("vividness:  " + str(vivid))
         #condi_ei(tpm, len(condidate_sys), len(neigbors)-len(condidate_sys))
         print(120 * '-')
-        return tpm, un, syn, vivid, onenote_tpm_result, onenote_un_result, onenote_syn_result, onenote_vividness_result
+        return un, un_en, syn, vivid, onenote_tpm_result, onenote_un_result, onenote_syn_result, onenote_vividness_result
 
 def permute_matrix_rows(original_order, new_order):
     # 原始和新顺序的长度（应该是3）
