@@ -1,0 +1,7 @@
+.Ds Store
+nohup.out
+**/__pycache__/**
+**/.ipynb checkpoints
+**/.qiniu_pythonsdk_hostscache.json
+
+.env

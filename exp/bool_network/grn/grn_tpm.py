@@ -71,7 +71,7 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fil
 
     if candidate_sys is not None:
         print("mechanism:    " + ','.join([variables[j] for j in candidate_sys]))
-        if len(candidate_sys) <= 8:
+        if len(candidate_sys) <= 20:
             neigbors, tpm = tpm_comb(candidate_sys, F, I, noise)
             print("tpm: ")
             print(tpm)
@@ -79,6 +79,7 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fil
             un = unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
             un_en = en_unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
             syn = synergy(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
+            print("un_en:  " + str(un_en))
 #             un_approx = un_comb(candidate_sys, F, I, noise)
 #             syn_approx = syn_comb(candidate_sys, F, I, noise)
 #             print("un_approx:  " + str(un_approx))
@@ -90,15 +91,18 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fil
             print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
             un = un_comb(candidate_sys, F, I, noise)
             syn = syn_comb(candidate_sys, F, I, noise)
-        vivid = un + syn
+        #vivid = un + syn
 
         print("un:  " + str(un))
-        print("un_en:  " + str(un_en))
         print("syn:  " + str(syn))
         #print("vividness:  " + str(vivid))
         #condi_ei(tpm, len(condidate_sys), len(neigbors)-len(condidate_sys))
         print(120 * '-')
+<<<<<<< HEAD
         return un, un_en, syn, vivid, onenote_tpm_result, onenote_un_result, onenote_syn_result, onenote_vividness_result
+=======
+        return tpm, un, syn, onenote_tpm_result, onenote_un_result, onenote_syn_result, onenote_vividness_result
+>>>>>>> 4a5ada0091a2a579189ecb916c7b9b20094f9366
 
 def permute_matrix_rows(original_order, new_order):
     # 原始和新顺序的长度（应该是3）
