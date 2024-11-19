@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import itertools
 import seaborn as sns
+import matplotlib.pyplot as plt
+from grn_tpm import iit_tpm_cal
 
 def value_boolnet(symbol_boolnet, weights):
     results = {key: weights.get(w, 0) for key, w in symbol_boolnet.items()}
@@ -30,16 +32,16 @@ def get_wm(boolnet, vars):
         wm.loc[s, e] = boolnet[(s, e)]
     return wm.values
 
-def get_wm2(boolnet, vars):
-    """
-    Get weights matrix
-    """
-    dim = len(vars)
-    # make weights matrix
-    wm = pd.DataFrame(np.zeros((dim, dim, dim)), columns=vars, index=vars)
-    for s1, s2, e in boolnet:
-        wm.loc[s1, s2, e] = boolnet[(s1, s2, e)]
-    return wm.values
+# def get_wm2(boolnet, vars):
+#     """
+#     Get weights matrix
+#     """
+#     dim = len(vars)
+#     # make weights matrix
+#     wm = np.zeros((dim, dim, dim))
+#     for s1, s2, e in boolnet:
+#         wm[s1, s2, e] = boolnet[(s1, s2, e)]
+#     return wm.values
 
 
 def get_states(vars, big_endian=True):
@@ -131,6 +133,109 @@ def tpm_series(tpm, init_state, steps, seed = 42):
         serie_str.append(decimal_to_binary(sample, min_length=int(np.log2(len(probabilities)))))
     return serie, serie_str
 
+def tpm_syn(k, w):
+    w_1a_b = 0
+    w_2a_b = 0
+    w_2c_b = 0
+    w_1b_c = 0
+    w_2b_c = 0
+    w_1c_a = w
+    w_2c_a = w
+    w_2b_a = 0
+    w_a_b = 0
+    w_b_c = 0
+    w_c_a = 1 - w
+    w_a_a = 1 - w
+    w_b_b = 0
+    w_c_c = 0
+    w_c_b = 0
+    tpm_list = []
+    for j in ['a', 'b', 'c', '1', '2']:
+        tpm = np.zeros([32,2])
+        for i in range(32):
+            inputs = decimal_to_binary(i, min_length=5)
+            in_ls = [2*int(n)-1 for n in inputs]
+            if j=='a':
+                term = w_1c_a*in_ls[2]*in_ls[3] + w_2c_a*in_ls[2]*in_ls[4] + w_c_a*in_ls[2] + w_a_a*in_ls[0]
+            elif j=='b':
+                term = w_1a_b*in_ls[0]*in_ls[3] + w_2c_b*in_ls[2]*in_ls[4] + w_a_b*in_ls[0] + w_b_b*in_ls[1] + w_c_b*in_ls[2]
+            elif j=='c':
+                term = w_1b_c*in_ls[1]*in_ls[3] + w_2b_c*in_ls[1]*in_ls[4] + w_b_c*in_ls[1] + w_c_c*in_ls[2]
+            else:
+                term = 0.5
+
+            tpm[i,1] = 1. / (1. + np.exp(-k * term))
+            tpm[i,0] = 1 - tpm[i,1]
+        tpm_list.append(tpm)
+
+    tpm_all = np.ones([32, 32])
+    for i in range(32):
+        ind_str = decimal_to_binary(i, min_length=5)
+        for m, n in enumerate(ind_str):
+            tpm_all[:, i] *= tpm_list[m][:, int(n)] 
+
+    return tpm_all
+
+def serie_plot(bnet, w, k, steps, seed=1, name='', leg=False, syn_inter=False, figure_show=False):
+    series_ls = []
+    if syn_inter:
+        tpm_v = tpm_syn(k=k, w=w)
+    else:
+        tpm, tpm_v = make_tpm(bnet, w=w, k=k)
+    un_sys, un_en, syn, tpm_dic = iit_tpm_cal(tpm_v, mech_size=3, en_size=2)   
+    colors = ["#BB4F4F", '#2A69B3', '#74B38F', '#FFA500']
+    strs = [decimal_to_binary(i, min_length=3) for i in range(8)]
+    for init_state in strs:
+        #series_en = []
+        if figure_show:
+            fig, ax = plt.subplots(figsize=(5,2))
+        for indx,en in enumerate(["00", "01", "10", "11"]):
+            en_state = en
+            serie, serie_str = tpm_series(tpm_dic[en_state], init_state, steps, seed)
+            series_ls.append(serie)
+            if figure_show:
+                ax.scatter(range(steps+1), serie, label='en_state:'+en_state, color=colors[indx])
+
+        if figure_show:
+            ax.set_xlabel('Time')
+            ax.set_ylabel('System state')
+
+            # 设置y轴的标签
+            ax.set_yticks(range(8))
+            ax.set_yticklabels(strs)
+            handles, labels = plt.gca().get_legend_handles_labels()
+            by_label = dict(zip(labels, handles))
+            if leg:
+                plt.legend(by_label.values(), by_label.keys(), loc=[1.01, 0])
+            plt.title(name + '_init=' + init_state + '_syn=' + str(round(syn,4)))
+            # 显示图形
+            plt.show()
+        
+    return un_sys, un_en, syn, series_ls
+
+def hamming_distance(seq1, seq2):
+    # 确保两个序列长度相同
+    if len(seq1) != len(seq2):
+        raise ValueError("Both sequences must have the same length")
+    
+    # 计算汉明距离
+    distance = 0
+    for bit1, bit2 in zip(seq1, seq2):
+        # 如果两个位不同，则距离加1
+        if bit1 != bit2:
+            distance += 1
+    
+    return distance
+
+def dis_mean(series):
+    dis = 0
+    lens = len(series)
+    nums = lens * (lens - 1) / 2
+    for i in series:
+        for j in series:
+            dis += hamming_distance(i,j)
+    dis /= nums
+    return dis
 
 
 
