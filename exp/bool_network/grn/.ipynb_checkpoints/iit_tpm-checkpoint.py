@@ -134,18 +134,21 @@ def tpm_series(tpm, init_state, steps, seed = 42):
     return serie, serie_str
 
 def tpm_syn(k, w):
-    w_1a_b = 0
-    w_2a_b = 0
+    w_1b_b = w
+    w_2b_b = 0
     w_2c_b = 0
-    w_1b_c = 0
-    w_2b_c = 0
-    w_1c_a = w
-    w_2c_a = w
+    w_1c_c = 0
+    w_2c_c = w
+    w_1a_a = 0
+    w_2a_a = 0
     w_2b_a = 0
-    w_a_b = 0
-    w_b_c = 0
+    w_12a_a = w
+    w_12b_b = 0
+    w_12c_c = 0
+    w_a_b = 1 - w
+    w_b_c = 1 - w
     w_c_a = 1 - w
-    w_a_a = 1 - w
+    w_a_a = 0
     w_b_b = 0
     w_c_c = 0
     w_c_b = 0
@@ -156,11 +159,11 @@ def tpm_syn(k, w):
             inputs = decimal_to_binary(i, min_length=5)
             in_ls = [2*int(n)-1 for n in inputs]
             if j=='a':
-                term = w_1c_a*in_ls[2]*in_ls[3] + w_2c_a*in_ls[2]*in_ls[4] + w_c_a*in_ls[2] + w_a_a*in_ls[0]
+                term = w_12a_a*in_ls[0]*in_ls[3]*in_ls[4] + w_2a_a*in_ls[0]*in_ls[4] + w_c_a*in_ls[2] + w_a_a*in_ls[0]
             elif j=='b':
-                term = w_1a_b*in_ls[0]*in_ls[3] + w_2c_b*in_ls[2]*in_ls[4] + w_a_b*in_ls[0] + w_b_b*in_ls[1] + w_c_b*in_ls[2]
+                term = w_1b_b*in_ls[1]*in_ls[3] + w_2b_b*in_ls[1]*in_ls[4] + w_a_b*in_ls[0] + w_b_b*in_ls[1]
             elif j=='c':
-                term = w_1b_c*in_ls[1]*in_ls[3] + w_2b_c*in_ls[1]*in_ls[4] + w_b_c*in_ls[1] + w_c_c*in_ls[2]
+                term = w_12c_c*in_ls[2]*in_ls[3]*in_ls[4] + w_2c_c*in_ls[2]*in_ls[4] + w_b_c*in_ls[1] + w_c_c*in_ls[2]
             else:
                 term = 0.5
 
