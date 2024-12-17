@@ -1,4 +1,0 @@
-A = ( NOT E ) OR B OR D OR C
-B = ( NOT E ) OR C OR A 
-C = ( NOT E ) OR D OR B
-D = ( NOT E ) OR A 

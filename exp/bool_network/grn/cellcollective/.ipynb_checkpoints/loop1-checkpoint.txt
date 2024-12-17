@@ -1,3 +1,0 @@
-A = ( NOT D ) OR B 
-B = ( NOT D ) OR C
-C = ( NOT D )
