@@ -8,9 +8,9 @@ from func.EI_calculation import tpm_ei_new
 import func.load_database13 as db
 
 def tpm_one(f_one, inputs, ss, noise):
-    if f_one == []:
-        print("There is an empty F")
-        f_one = [0, 1]
+#     if f_one == []:
+#         print("There is an empty F")
+#         f_one = [0, 1]
     lens = len(f_one)
     matrix = np.zeros([lens, 2])
     for i in range(lens):
@@ -29,7 +29,7 @@ def tpm_one(f_one, inputs, ss, noise):
         all_inputs = inputs
     return matrix, en_size, all_inputs
 
-def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fill_onenode=False, noise=0, save_onenote = True):
+def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, figure_show=False, noise=0, save_onenote = True):
     F, I, degree, variables, constants = db.text_to_BN(folder=folder,textfile=textfile)
     if candidate_sys == "all":
         candidate_sys = range(len(variables))
@@ -41,10 +41,10 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fil
     for i in range(len(variables)):
         for j in I[i]:
             G.add_edges_from([(all_nodes[j], variables[i])])
-    
-    pos = nx.spring_layout(G)  # 为图形设置布局
-    nx.draw(G, pos, with_labels=True, node_color='skyblue', node_size=700, edge_color='k', linewidths=1, font_size=15)
-    plt.show()
+    if figure_show:
+        pos = nx.spring_layout(G)  # 为图形设置布局
+        nx.draw(G, pos, with_labels=True, node_color='skyblue', node_size=700, edge_color='k', linewidths=1, font_size=15)
+        plt.show()
     #print("all intrinsic variables: " + ','.join(variables))
     #print("external parameters:" + ','.join(constants))
     onenote_tpm_result = {}
@@ -58,16 +58,6 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fil
             onenote_un_result[variables[i]] = unique(tpm1, 1, en_size)[0]
             onenote_syn_result[variables[i]] = synergy(tpm1, 1, en_size)[0]
             onenote_vividness_result[variables[i]] = condi_ei(tpm1, 1, en_size)
-            if fill_onenode  is False:
-                #print("mechanism:    " + variables[i])
-                #print("environment:    " + ','.join([all_nodes[j] for j in I[i]]))
-                #print(tpm1)
-                #print("un:  " + str(unique(tpm1, 1, en_size)[0]))
-                #print("syn:  " + str(synergy(tpm1, 1, en_size)[0]))
-                #print("vividness:  " + str(condi_ei(tpm1, 1, en_size)))
-                print(120 * '-')
-            else:
-                continue
 
     if candidate_sys is not None:
         #print("mechanism:    " + ','.join([variables[j] for j in candidate_sys]))
@@ -99,7 +89,7 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fil
         #condi_ei(tpm, len(condidate_sys), len(neigbors)-len(condidate_sys))
         #print(120 * '-')
 
-        return un, un_en, syn #, vivid, onenote_tpm_result, onenote_un_result, onenote_syn_result, onenote_vividness_result
+        return un, un_en, syn, tpm, len(neigbors) #, vivid, onenote_tpm_result, onenote_un_result, onenote_syn_result, onenote_vividness_result
 
 def permute_matrix_rows(original_order, new_order):
     # 原始和新顺序的长度（应该是3）
@@ -342,7 +332,8 @@ def tpm_to_dis(tpm, mech_size, en_size):
     return tpm_dis
 
 def iit_tpm_cal(tpm_v, mech_size, en_size):
-    tpm_dis = tpm_to_dis(tpm_v, mech_size, en_size)
+    tpm_dis = tpm_v
+    #tpm_dis = tpm_to_dis(tpm_v, mech_size, en_size)
     un = unique(tpm_dis, mech_size, en_size)[0]
     syn, tpm_dic = synergy(tpm_dis, mech_size, en_size)
     un_en = en_unique(tpm_dis, mech_size, en_size)[0]

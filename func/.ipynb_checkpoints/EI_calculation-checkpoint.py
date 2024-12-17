@@ -86,12 +86,15 @@ def tpm_ei_new(tpm, log_base = 2):
     
     det = det / np.log2(log_base)
     deg = deg / np.log2(log_base)
-
-    det_c = det / np.log2(q) * np.log2(log_base)
-    deg_c = deg / np.log2(q) * np.log2(log_base)
-    # calculate total EI
     ei_all = ei_x.mean()
-    eff = ei_all / np.log2(q) * np.log2(log_base)
+    if q > 1:
+        det_c = det / np.log2(q) * np.log2(log_base)
+        deg_c = deg / np.log2(q) * np.log2(log_base)
+        eff = ei_all / np.log2(q) * np.log2(log_base)
+    else:
+        det_c = 0
+        deg_c = 0
+        eff = 0
     return ei_all,det,deg,eff,det_c,deg_c
 
 def condi_ei(markov_matrix,mech_size,state=1):
