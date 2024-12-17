@@ -98,7 +98,7 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fil
         #condi_ei(tpm, len(condidate_sys), len(neigbors)-len(condidate_sys))
         print(120 * '-')
 
-        return un, un_en, syn, tpm, onenote_tpm_result, onenote_un_result, onenote_syn_result, onenote_vividness_result
+        return un, un_en, syn, tpm, len(neigbors)
 
 
 
@@ -342,7 +342,7 @@ def tpm_to_dis(tpm, mech_size, en_size):
             tpm_dis[:, num] += tpm[:, pattern]
     return tpm_dis
 
-def iit_tpm_cal(tpm_v, mech_size, en_size, dis=False):
+def iit_tpm_cal(tpm_v, mech_size, en_size, dis=True):
     if dis:
         tpm_dis = tpm_v
     else:
