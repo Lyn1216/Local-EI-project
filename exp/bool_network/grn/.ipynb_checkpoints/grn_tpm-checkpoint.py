@@ -8,9 +8,9 @@ from func.EI_calculation import tpm_ei_new
 import func.load_database13 as db
 
 def tpm_one(f_one, inputs, ss, noise):
-    if f_one == []:
-        print("There is an empty F")
-        f_one = [0, 1]
+#     if f_one == []:
+#         print("There is an empty F")
+#         f_one = [0, 1]
     lens = len(f_one)
     matrix = np.zeros([lens, 2])
     for i in range(lens):
@@ -91,7 +91,6 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fil
             print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
             un = un_comb(candidate_sys, F, I, noise)
             syn = syn_comb(candidate_sys, F, I, noise)
-        #vivid = un + syn
 
         print("un:  " + str(un))
         print("syn:  " + str(syn))
@@ -99,7 +98,7 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fil
         #condi_ei(tpm, len(condidate_sys), len(neigbors)-len(condidate_sys))
         print(120 * '-')
 
-        return un, un_en, syn, vivid, onenote_tpm_result, onenote_un_result, onenote_syn_result, onenote_vividness_result
+        return un, un_en, syn, tpm, onenote_tpm_result, onenote_un_result, onenote_syn_result, onenote_vividness_result
 
 
 
@@ -343,8 +342,11 @@ def tpm_to_dis(tpm, mech_size, en_size):
             tpm_dis[:, num] += tpm[:, pattern]
     return tpm_dis
 
-def iit_tpm_cal(tpm_v, mech_size, en_size):
-    tpm_dis = tpm_to_dis(tpm_v, mech_size, en_size)
+def iit_tpm_cal(tpm_v, mech_size, en_size, dis=False):
+    if dis:
+        tpm_dis = tpm_v
+    else:
+        tpm_dis = tpm_to_dis(tpm_v, mech_size, en_size)
     un = unique(tpm_dis, mech_size, en_size)[0]
     syn, tpm_dic = synergy(tpm_dis, mech_size, en_size)
     un_en = en_unique(tpm_dis, mech_size, en_size)[0]
