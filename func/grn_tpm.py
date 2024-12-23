@@ -4,7 +4,7 @@ import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 from itertools import product
-from func.EI_calculation import tpm_ei_new
+from func.EI_calculation import tpm_ei_new, tpm_ei_new2
 import func.load_database13 as db
 
 def tpm_one(f_one, inputs, ss, noise):
@@ -29,76 +29,77 @@ def tpm_one(f_one, inputs, ss, noise):
         all_inputs = inputs
     return matrix, en_size, all_inputs
 
-def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fill_onenode=False, noise=0, save_onenote = True):
+def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, figure_show=False, noise=0):
     F, I, degree, variables, constants = db.text_to_BN(folder=folder,textfile=textfile)
     if candidate_sys == "all":
         candidate_sys = range(len(variables))
 
-    G = nx.DiGraph()
     all_nodes = variables + constants
-    G.add_nodes_from(all_nodes)
     
-    for i in range(len(variables)):
-        for j in I[i]:
-            G.add_edges_from([(all_nodes[j], variables[i])])
-    
-    pos = nx.spring_layout(G)  # 为图形设置布局
-    nx.draw(G, pos, with_labels=True, node_color='skyblue', node_size=700, edge_color='k', linewidths=1, font_size=15)
-    plt.show()
-    print("all intrinsic variables: " + ','.join(variables))
-    print("external parameters:" + ','.join(constants))
-    onenote_tpm_result = {}
-    onenote_un_result = {}
-    onenote_syn_result = {}
-    onenote_vividness_result = {}
-    if save_onenote is True :
+    if figure_show:
+        G = nx.DiGraph()
+        G.add_nodes_from(all_nodes)
         for i in range(len(variables)):
-            tpm1, en_size, _ = tpm_one(F[i], I[i], i, noise=noise)
-            onenote_tpm_result[variables[i]] = tpm1
-            onenote_un_result[variables[i]] = unique(tpm1, 1, en_size)[0]
-            onenote_syn_result[variables[i]] = synergy(tpm1, 1, en_size)[0]
-            onenote_vividness_result[variables[i]] = condi_ei(tpm1, 1, en_size)
-            if fill_onenode  is False:
-                print("mechanism:    " + variables[i])
-                print("environment:    " + ','.join([all_nodes[j] for j in I[i]]))
-                print(tpm1)
-                print("un:  " + str(unique(tpm1, 1, en_size)[0]))
-                print("syn:  " + str(synergy(tpm1, 1, en_size)[0]))
-                #print("vividness:  " + str(condi_ei(tpm1, 1, en_size)))
-                print(120 * '-')
-            else:
-                continue
+            for j in I[i]:
+                G.add_edges_from([(all_nodes[j], variables[i])])
+
+        pos = nx.spring_layout(G)  # 为图形设置布局
+        nx.draw(G, pos, with_labels=True, node_color='skyblue', node_size=700, edge_color='k', linewidths=1, font_size=15)
+        plt.show()
+        print("all intrinsic variables: " + ','.join(variables))
+        print("external parameters:" + ','.join(constants))
+#     onenote_tpm_result = {}
+#     onenote_un_result = {}
+#     onenote_syn_result = {}
+#     onenote_vividness_result = {}
+#     if save_onenote is True :
+#         for i in range(len(variables)):
+#             tpm1, en_size, _ = tpm_one(F[i], I[i], i, noise=noise)
+#             onenote_tpm_result[variables[i]] = tpm1
+#             onenote_un_result[variables[i]] = unique(tpm1, 1, en_size)[0]
+#             onenote_syn_result[variables[i]] = synergy(tpm1, 1, en_size)[0]
+#             onenote_vividness_result[variables[i]] = condi_ei(tpm1, 1, en_size)
+#             if fill_onenode  is False:
+#                 print("mechanism:    " + variables[i])
+#                 print("environment:    " + ','.join([all_nodes[j] for j in I[i]]))
+#                 print(tpm1)
+#                 print("un:  " + str(unique(tpm1, 1, en_size)[0]))
+#                 print("syn:  " + str(synergy(tpm1, 1, en_size)[0]))
+#                 #print("vividness:  " + str(condi_ei(tpm1, 1, en_size)))
+#                 print(120 * '-')
+#             else:
+#                 continue
 
     if candidate_sys is not None:
-        print("mechanism:    " + ','.join([variables[j] for j in candidate_sys]))
+#         print("mechanism:    " + ','.join([variables[j] for j in candidate_sys]))
         if len(candidate_sys) <= 20:
             neigbors, tpm = tpm_comb(candidate_sys, F, I, noise)
-            print("tpm: ")
-            print(tpm)
-            print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
-            un = unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
-            un_en = en_unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
-            syn = synergy(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
-            print("un_en:  " + str(un_en))
+#             print("tpm: ")
+#             print(tpm)
+#             print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
+#             un = unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
+#             un_en = en_unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
+            syn, expansive, introverted, tpm_dic = synergy(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))
+#             print("un_en:  " + str(un_en))
 #             un_approx = un_comb(candidate_sys, F, I, noise)
 #             syn_approx = syn_comb(candidate_sys, F, I, noise)
 #             print("un_approx:  " + str(un_approx))
 #             print("syn_approx:  " + str(syn_approx))
         
-        else:
-            neigbors = nei_comb(candidate_sys, F, I, noise)[0]
-            tpm = "None"
-            print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
-            un = un_comb(candidate_sys, F, I, noise)
-            syn = syn_comb(candidate_sys, F, I, noise)
+#         else:
+#             neigbors = nei_comb(candidate_sys, F, I, noise)[0]
+#             tpm = "None"
+# #             print("environment:    " + ','.join([all_nodes[j] for j in neigbors]))
+#             un = un_comb(candidate_sys, F, I, noise)
+#             syn = syn_comb(candidate_sys, F, I, noise)
 
-        print("un:  " + str(un))
-        print("syn:  " + str(syn))
-        #print("vividness:  " + str(vivid))
-        #condi_ei(tpm, len(condidate_sys), len(neigbors)-len(condidate_sys))
-        print(120 * '-')
+#         print("un:  " + str(un))
+#         print("syn:  " + str(syn))
+#         #print("vividness:  " + str(vivid))
+#         #condi_ei(tpm, len(condidate_sys), len(neigbors)-len(condidate_sys))
+#         print(120 * '-')
 
-        return un, un_en, syn, tpm, len(neigbors)
+        return expansive, introverted, syn, tpm, len(neigbors)
 
 
 
@@ -202,13 +203,17 @@ def tpm_ei(tpm, log_base = 2):
 
 
 def synergy(markov_matrix, mech_size, en_size):
-    ei_all, tpm_dic = condi_ei(markov_matrix, mech_size, en_size)
-    un = unique(markov_matrix, mech_size, en_size)[0]
-    syn = ei_all - un
-    return syn, tpm_dic
+    eis, dets, nondegs, tpm_dic  = condi_ei(markov_matrix, mech_size, en_size)
+    un, det, nondeg, mixed_markov = unique(markov_matrix, mech_size, en_size)
+    syn = eis - un
+    expansive = nondegs - det
+    introverted = dets - nondeg
+    return syn, expansive, introverted, tpm_dic
 
 def condi_ei(markov_matrix, mech_size, en_size):
-    ei = 0
+    eis = 0
+    dets = 0
+    nondegs = 0
     state_size = 2**mech_size
     state_en = 2**en_size
     tpm_dic = {}
@@ -221,10 +226,15 @@ def condi_ei(markov_matrix, mech_size, en_size):
             binary_array = [int(bit) for bit in padded_binary_string] 
             pattern = int(''.join(str(cell) for cell in binary_array), 2)
             local_markov[num, :] = markov_matrix[pattern, :]
-        ei += tpm_ei(local_markov)
+        ei,det,nondeg = tpm_ei_new2(local_markov)
+        eis += ei
+        dets += det
+        nondegs += nondeg
         tpm_dic[en_str] = local_markov
-    ei = ei / state_en
-    return ei, tpm_dic 
+    eis = eis / state_en
+    dets /= state_en
+    nondegs /= state_en
+    return eis, dets, nondegs, tpm_dic 
 
 def unique(markov_matrix, mech_size, en_size):
     state_size = 2**mech_size
@@ -239,8 +249,8 @@ def unique(markov_matrix, mech_size, en_size):
             pattern = int(''.join(str(cell) for cell in binary_array), 2)
             local_markov[num, :] = markov_matrix[pattern, :]
         mixed_markov += local_markov
-    ei = tpm_ei(mixed_markov / state_en)
-    return ei, mixed_markov
+    ei,det,nondeg = tpm_ei_new2(mixed_markov / state_en)
+    return ei, det, nondeg, mixed_markov
 
 def en_unique(markov_matrix, mech_size, en_size):
     state_size = 2**mech_size
@@ -348,10 +358,10 @@ def iit_tpm_cal(tpm_v, mech_size, en_size, dis=True):
     else:
         tpm_dis = tpm_to_dis(tpm_v, mech_size, en_size)
     un = unique(tpm_dis, mech_size, en_size)[0]
-    syn, tpm_dic = synergy(tpm_dis, mech_size, en_size)
+    syn, expansive, introverted, tpm_dic = synergy(tpm_dis, mech_size, en_size)
     un_en = en_unique(tpm_dis, mech_size, en_size)[0]
 #     print("un:  " + str(un))
 #     print("un_en:  " + str(un_en))
 #     print("syn:  " + str(syn))
-    return un, un_en, syn, tpm_dic
+    return un, un_en, syn, expansive, introverted, tpm_dic
     

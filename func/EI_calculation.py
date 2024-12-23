@@ -25,7 +25,7 @@ def tpm_ei(tpm, log_base = 2):
     # replace 0 to a small positive number to avoid log error
     eps = 1E-10
     tpm_e = np.where(tpm==0, eps, tpm)
-    puy_e = np.where(tpm==0, eps, puy)
+    puy_e = np.where(puy==0, eps, puy)
     
     # calculate EI of specific x
     ei_x = (np.log2(n * tpm_e / puy_e) / np.log2(log_base)  * tpm).sum(axis=1)
@@ -96,6 +96,33 @@ def tpm_ei_new(tpm, log_base = 2):
         deg_c = 0
         eff = 0
     return ei_all,det,deg,eff,det_c,deg_c
+
+def tpm_ei_new2(tpm, log_base = 2):
+    # marginal distribution of y given x ~ Unifrom Dist
+    puy = tpm.mean(axis=0)
+    m,n = tpm.shape
+    if m > n:
+        q = n
+    else:
+        q = m
+    
+    # replace 0 to a positive number to avoid log error
+    eps = 1e-5
+    tpm_e = np.where(tpm==0, eps, tpm)
+    puy_e = np.where(puy==0, eps, puy)
+    
+    # calculate EI of specific x
+    ei_x = (np.log2(tpm_e / puy_e) / np.log2(log_base)  * tpm).sum(axis=1)
+    
+    # calculate det and deg
+    det = (tpm * np.log2(tpm_e)).sum(axis=1).mean(axis=0)
+    nondeg = (-puy * np.log2(puy_e)).sum()
+    
+    det = det / np.log2(log_base)
+    nondeg = nondeg / np.log2(log_base)
+    ei_all = ei_x.mean()
+    
+    return ei_all,det,nondeg
 
 def condi_ei(markov_matrix,mech_size,state=1):
     ei = 0
