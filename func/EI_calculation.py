@@ -124,8 +124,10 @@ def tpm_ei_new2(tpm, log_base = 2):
     
     return ei_all,det,nondeg
 
-def condi_ei(markov_matrix,mech_size,state=1):
+def condi_ei_ca(markov_matrix,mech_size,state=1):
     ei = 0
+    dets = 0
+    nondegs = 0
     state_size = (state + 1)**(mech_size)
     for e1 in ['0','1']:
         for e2 in ['0','1']:
@@ -136,9 +138,11 @@ def condi_ei(markov_matrix,mech_size,state=1):
                 binary_array = [int(bit) for bit in padded_binary_string] 
                 pattern = int(''.join(str(cell) for cell in binary_array), state+1)
                 local_markov[num, :] = markov_matrix[pattern, :]
-            ei0 = tpm_ei(local_markov, log_base = state+1)
+            ei0,det,nondeg = tpm_ei_new2(local_markov, log_base = state+1)
             ei += ei0
-    return ei / 4
+            dets += det
+            nondegs += nondeg
+    return ei / 4, dets / 4, nondegs / 4
 
 def unique_ca(markov_matrix, mech_size, state=1):
     state_size = (state + 1)**(mech_size)
@@ -153,8 +157,8 @@ def unique_ca(markov_matrix, mech_size, state=1):
                 pattern = int(''.join(str(cell) for cell in binary_array), state+1)
                 local_markov[num, :] = markov_matrix[pattern, :]
             mixed_markov += local_markov
-    ei = tpm_ei(mixed_markov / 4)
-    return ei, mixed_markov
+    ei, det, nondeg = tpm_ei_new2(mixed_markov / 4)
+    return ei, det, nondeg, mixed_markov
 
 def en_unique_ca(markov_matrix, mech_size):
     state_size = 2**mech_size
@@ -169,11 +173,13 @@ def en_unique_ca(markov_matrix, mech_size):
                 pattern = int(''.join(str(cell) for cell in binary_array), 2)
                 local_markov[num, :] = markov_matrix[pattern, :]
         mixed_markov += local_markov
-    ei,det,deg,eff,det_c,deg_c = tpm_ei_new(mixed_markov / state_size)
+    ei,det,nondeg = tpm_ei_new2(mixed_markov / state_size)
     return ei, mixed_markov
 
 def synergy_ca(markov_matrix, mech_size):
-    ei_all = condi_ei(markov_matrix,mech_size)
-    un = unique_ca(markov_matrix,mech_size)[0]
-    syn = ei_all - un
-    return syn
+    eis, dets, nondegs = condi_ei_ca(markov_matrix,mech_size)
+    un, det, nondeg, mixed_markov = unique_ca(markov_matrix,mech_size)
+    syn = eis - un
+    expansive = nondegs - det
+    introverted = dets - nondeg
+    return syn, expansive, introverted
