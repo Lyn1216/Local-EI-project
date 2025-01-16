@@ -80,6 +80,8 @@ def text_bn_graph(folder = '', textfile = 'example.txt', candidate_sys=None, fig
 #             un = unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
 #             un_en = en_unique(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))[0]
             syn, expansive, introverted, tpm_dic = synergy(tpm, len(candidate_sys), len(neigbors)-len(candidate_sys))
+        if figure_show:
+            print("mechanism:    " + ','.join([variables[j] for j in candidate_sys]))
 #             print("un_en:  " + str(un_en))
 #             un_approx = un_comb(candidate_sys, F, I, noise)
 #             syn_approx = syn_comb(candidate_sys, F, I, noise)
