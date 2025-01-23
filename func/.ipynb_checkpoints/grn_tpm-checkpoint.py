@@ -204,13 +204,18 @@ def tpm_ei(tpm, log_base = 2):
     return ei_all
 
 
-def synergy(markov_matrix, mech_size, en_size):
+def synergy(markov_matrix, mech_size, en_size, new_item=False):
     eis, dets, nondegs, tpm_dic  = condi_ei(markov_matrix, mech_size, en_size)
     un, det, nondeg, mixed_markov = unique(markov_matrix, mech_size, en_size)
     syn = eis - un
-    expansive = nondegs - det
-    introverted = dets - nondeg
-    return syn, expansive, introverted, tpm_dic
+    if new_item:
+        syn_nondeg = nondegs - det - nondeg
+        syn_det = dets
+        return syn, syn_nondeg, syn_det, tpm_dic
+    else:
+        expansive = nondegs - det
+        introverted = dets - nondeg
+        return syn, expansive, introverted, tpm_dic
 
 def condi_ei(markov_matrix, mech_size, en_size):
     eis = 0
@@ -354,16 +359,16 @@ def tpm_to_dis(tpm, mech_size, en_size):
             tpm_dis[:, num] += tpm[:, pattern]
     return tpm_dis
 
-def iit_tpm_cal(tpm_v, mech_size, en_size, dis=True):
+def iit_tpm_cal(tpm_v, mech_size, en_size, dis=True, new_item=False):
     if dis:
         tpm_dis = tpm_v
     else:
         tpm_dis = tpm_to_dis(tpm_v, mech_size, en_size)
     un = unique(tpm_dis, mech_size, en_size)[0]
-    syn, expansive, introverted, tpm_dic = synergy(tpm_dis, mech_size, en_size)
+    syn, item1, item2, tpm_dic = synergy(tpm_dis, mech_size, en_size, new_item)
     un_en = en_unique(tpm_dis, mech_size, en_size)[0]
 #     print("un:  " + str(un))
 #     print("un_en:  " + str(un_en))
 #     print("syn:  " + str(syn))
-    return un, un_en, syn, expansive, introverted, tpm_dic
+    return un, un_en, syn, item1, item2, tpm_dic
     
