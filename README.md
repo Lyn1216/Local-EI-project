@@ -1,10 +1,6 @@
-# Local causal emergence 
-There are codes for calculating and identifying local causal emergence.
+# Quantifying system-environment synergistic information by effective information decomposition
 
-
-<div align=center>
-<img src="resources/framework.png">
-</div>
+Paper Link: https://doi.org/10.48550/arXiv.2501.16676
 
 
 # Functions of folders
