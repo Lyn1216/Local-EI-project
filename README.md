@@ -16,79 +16,20 @@ exp: The running code for the experiments presented in the project. <br>
      
      cellular automaton: The experiments about cellular automaton. 
 
-## 1. Homemade Experiments (`homemade_exp`)
 
-This folder contains experiments conducted using homemade code and the GRN framework.
-
-### 1.1 Experiments with Old Code (`exp_old`)  
-
-Experiments conducted using older codebase, categorized by their focus:
-
-- **Degree Influence**:
-  - `Degree_or.ipynb`
-  - `Degree_xor.ipynb`
-  - `Degree-noise_or.ipynb` (Note: There are two files with similar names, ensure correct identification in usage)
-  - `Degree-noise_xor.ipynb`
-
-- **Logic Influence**:
-  - `logic_0.1noise4.0.ipynb`
-  - `logic_nonoise4.0.ipynb`
-
-- **Noise Influence**:
-  - `noise_OR4.0.ipynb`
-  - `noise_XOR4.0.ipynb`
-
-- **Structure Influence**:
-  - `structure_OR4.0.ipynb`
-  - `structure_XOR4.0.ipynb`
-
-- **Logic and Noise Influence**:
-  - `logic_noise.ipynb`
-
-### 1.2 Experiments with GRN Framework (`exp_by_grn`)
-
-Experiments conducted using the GRN framework, categorized similarly:
-
-- **Logic Influence**:
-  - `logic_0.1_noise.ipynb`
-  - `logic_no_noise.ipynb`
-
-- **Noise Influence**:
-  - `noise_OR.ipynb`
-  - `noise_XOR.ipynb`
-
-- **Structure Influence**:
-  - `structure_OR.ipynb`
-  - `structure_XOR.ipynb`
-
-- **Logic and Noise Influence**:
-  - `logic_noise.ipynb`
-
-## 2. Motif Experiments (`motify`)
-
-This folder contains experiments focused on motifs within Boolean networks.
-
-### 2.1 Motifs with Loops (`motify_loop`)
-
-Experiments on 8 motifs where each node has a self-loop.
-
-### 2.2 Motifs without Loops (`motify_noloop`)
-
-Experiments on 8 motifs where only node A has a self-loop.
-
-## 3. Real GRN Networks (`real_grn_networks`)
+## 1. Real GRN Networks (`real_grn_networks`)
 
 Simulations of two real gene regulatory networks.
 
-### 3.1 Cortical Area Development (`Cortical_20862356`)
+### 1.1 Cortical Area Development (`Cortical_20862356`)
 
 Simulations related to Cortical Area Development.
 
-### 3.2 fMRI - Regulation of the Lac Operon (`fMRI_25790483`)
+### 1.2 fMRI - Regulation of the Lac Operon (`fMRI_25790483`)
 
 Simulations related to the regulation of the Lac Operon as per fMRI data.
 
-## 4. GRN Code (`grn`)
+## 2. GRN Code (`grn`)
 
 This folder contains references and resources for the gene regulatory network code used in the project.
 
@@ -96,8 +37,35 @@ This folder contains references and resources for the gene regulatory network co
 
 resources: The image files. <br>
 
+## 3. Else Experiments (`else`)
 
+This folder contains experiments conducted using homemade code and the GRN framework.
 
+### 3.1 Experiments with Old Code (`exp_old`)  
+
+Experiments conducted using older codebase, categorized by their focus:
+
+- **Degree Influence**
+
+- **Logic Influence**
+
+- **Noise Influence**
+
+- **Structure Influence**
+
+- **Logic and Noise Influence**
+
+### 3.2 Experiments with GRN Framework (`exp_by_grn`)
+
+Experiments conducted using the GRN framework, categorized similarly:
+
+- **Logic Influence**
+
+- **Noise Influence**
+
+- **Structure Influence**
+
+- **Logic and Noise Influence**
 
 # Acknowledgements
 
