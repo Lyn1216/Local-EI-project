@@ -1,3 +1,0 @@
-A = N
-B = A OR N
-C = (NOT A) OR B OR N

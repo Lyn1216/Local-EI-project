@@ -11,14 +11,16 @@ func: The function files used for calculating effective information. <br>
       p_calculation: The function used to calculate the probability value of one note.<br>
 
 exp: The running code for the experiments presented in the project. <br>
+
      boolean_network: The experiments on boolean network.
+     
      cellular automaton: The experiments about cellular automaton. 
 
 ## 1. Homemade Experiments (`homemade_exp`)
 
 This folder contains experiments conducted using homemade code and the GRN framework.
 
-### 1.1 Experiments with Old Code (`exp_old`)
+### 1.1 Experiments with Old Code (`exp_old`)  
 
 Experiments conducted using older codebase, categorized by their focus:
 
@@ -26,6 +28,7 @@ Experiments conducted using older codebase, categorized by their focus:
   - `Degree_or.ipynb`
   - `Degree_xor.ipynb`
   - `Degree-noise_or.ipynb` (Note: There are two files with similar names, ensure correct identification in usage)
+  - `Degree-noise_xor.ipynb`
 
 - **Logic Influence**:
   - `logic_0.1noise4.0.ipynb`
